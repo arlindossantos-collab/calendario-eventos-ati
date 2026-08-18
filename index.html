@@ -313,16 +313,22 @@
       calendar.render();
     }
 
-    // Função de Login via Google (Aceita qualquer conta Google / @ati.pe.gov.br)
+    // Função de Login via Google com Log Detalhado de Erros para Depuração
     async function fazerLoginGoogle() {
       try {
         await signInWithPopup(auth, googleProvider);
         return true;
       } catch (error) {
-        console.error("Erro no login Google:", error);
-        if (error.code !== 'auth/popup-closed-by-user') {
-          alert("Erro ao realizar login com o Google. Verifique se o domínio do seu site está autorizado no Firebase.");
-        }
+        console.error("Erro completo no login Google:", error);
+        
+        // Alerta de depuração com detalhes técnicos
+        alert(
+          `FALHA NA AUTENTICAÇÃO DO GOOGLE\n` +
+          `----------------------------------------\n` +
+          `Código: ${error.code}\n` +
+          `Mensagem: ${error.message}\n` +
+          `Origem do App: ${window.location.origin}`
+        );
         return false;
       }
     }
@@ -478,7 +484,7 @@
           fecharModal('modalEvento');
         } catch (err) {
           console.error("Erro ao salvar:", err);
-          alert("Não foi possível salvar o evento. Verifique as permissões no banco do Firebase.");
+          alert(`Erro ao salvar evento no Firestore:\n${err.message}`);
         }
       });
 
@@ -493,7 +499,7 @@
             fecharModal('modalDetalhes');
           } catch (err) {
             console.error("Erro ao excluir:", err);
-            alert("Não foi possível excluir o evento.");
+            alert(`Erro ao excluir evento:\n${err.message}`);
           }
         }
       });
