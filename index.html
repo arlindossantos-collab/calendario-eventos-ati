@@ -261,7 +261,7 @@
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Credenciais do Projeto Firebase do Usuário
+    // Credenciais do Projeto Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyANAPqfHQeoU4zgXn5cHmVFhI0PGgVUvTA",
       authDomain: "calendario-eventos-ati.firebaseapp.com",
@@ -313,18 +313,37 @@
       calendar.render();
     }
 
-    // Função para Autenticar via Google Popup
+    // Função para Autenticar via Google com Validação do Domínio @ati.pe.gov.br
     async function fazerLoginGoogle() {
       try {
-        await signInWithPopup(auth, googleProvider);
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+
+        if (!user.email || !user.email.endsWith('@ati.pe.gov.br')) {
+          alert(`Acesso negado (${user.email}). Apenas contas institucionais @ati.pe.gov.br têm permissão para gerenciar eventos.`);
+          await signOut(auth);
+          return false;
+        }
+        return true;
       } catch (error) {
         console.error("Erro no login Google:", error);
-        alert("Erro ao realizar login com o Google. Verifique se o provedor está ativo no Console do Firebase.");
+        if (error.code !== 'auth/popup-closed-by-user') {
+          alert("Erro ao realizar login com o Google. Verifique se o domínio do seu repositório no GitHub Pages foi adicionado aos 'Domínios Autorizados' no Console do Firebase.");
+        }
+        return false;
       }
     }
 
     function ouvirAutenticacao() {
-      onAuthStateChanged(auth, (user) => {
+      onAuthStateChanged(auth, async (user) => {
+        // Validação adicional no disparo de estado do Firebase
+        if (user && user.email && !user.email.endsWith('@ati.pe.gov.br')) {
+          alert(`O e-mail ${user.email} não possui autorização de escrita.`);
+          await signOut(auth);
+          usuarioLogado = null;
+          return;
+        }
+
         usuarioLogado = user;
         const authSection = document.getElementById('authSection');
 
@@ -357,8 +376,8 @@
 
     async function acionarCriacaoEvento(dataInicialStr = null) {
       if (!usuarioLogado) {
-        await fazerLoginGoogle();
-        if (!auth.currentUser) return;
+        const loginSucesso = await fazerLoginGoogle();
+        if (!loginSucesso || !auth.currentUser) return;
       }
       
       document.getElementById('formEvento').reset();
@@ -441,7 +460,9 @@
 
       document.getElementById('formEvento').addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!usuarioLogado) return alert('Autenticação necessária.');
+        if (!usuarioLogado || !usuarioLogado.email.endsWith('@ati.pe.gov.br')) {
+          return alert('Apenas contas institucionais @ati.pe.gov.br têm permissão para gravar eventos.');
+        }
 
         const id = document.getElementById('eventoId').value;
         const catSelect = document.getElementById('categoriaSelect').value;
@@ -463,19 +484,32 @@
           autorEmail: usuarioLogado.email
         };
 
-        if (id) {
-          await updateDoc(doc(db, "eventos", id), data);
-        } else {
-          await addDoc(collection(db, "eventos"), data);
+        try {
+          if (id) {
+            await updateDoc(doc(db, "eventos", id), data);
+          } else {
+            await addDoc(collection(db, "eventos"), data);
+          }
+          fecharModal('modalEvento');
+        } catch (err) {
+          console.error("Erro ao salvar:", err);
+          alert("Não foi possível salvar o evento. Verifique se as regras do seu Firestore no Console do Firebase foram atualizadas.");
         }
-
-        fecharModal('modalEvento');
       });
 
       document.getElementById('btnExcluirEvento').addEventListener('click', async () => {
+        if (!usuarioLogado || !usuarioLogado.email.endsWith('@ati.pe.gov.br')) {
+          return alert('Apenas contas @ati.pe.gov.br podem excluir eventos.');
+        }
+
         if (eventoSelecionado && confirm('Excluir este evento do calendário?')) {
-          await deleteDoc(doc(db, "eventos", eventoSelecionado.id));
-          fecharModal('modalDetalhes');
+          try {
+            await deleteDoc(doc(db, "eventos", eventoSelecionado.id));
+            fecharModal('modalDetalhes');
+          } catch (err) {
+            console.error("Erro ao excluir:", err);
+            alert("Não foi possível excluir o evento.");
+          }
         }
       });
 
@@ -536,5 +570,3 @@
   </script>
 </body>
 </html>
-
-
