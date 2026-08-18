@@ -150,7 +150,7 @@
           <i data-lucide="mail" class="w-5 h-5 text-slate-400 mt-2"></i>
           <div class="w-full">
             <label class="block text-xs font-medium text-slate-500 mb-1">Adicionar Convidados (E-mails)</label>
-            <input type="text" id="convidados" placeholder="e.g. maria@ati.pe.gov.br, joao@ati.pe.gov.br" class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="text" id="convidados" placeholder="e.g. maria@ati.pe.gov.br, joao@gmail.com" class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
             <p class="text-[10px] text-slate-400 mt-1">Separe múltiplos e-mails por vírgula.</p>
           </div>
         </div>
@@ -313,37 +313,22 @@
       calendar.render();
     }
 
-    // Função para Autenticar via Google com Validação do Domínio @ati.pe.gov.br
+    // Função de Login via Google (Aceita qualquer conta Google / @ati.pe.gov.br)
     async function fazerLoginGoogle() {
       try {
-        const result = await signInWithPopup(auth, googleProvider);
-        const user = result.user;
-
-        if (!user.email || !user.email.endsWith('@ati.pe.gov.br')) {
-          alert(`Acesso negado (${user.email}). Apenas contas institucionais @ati.pe.gov.br têm permissão para gerenciar eventos.`);
-          await signOut(auth);
-          return false;
-        }
+        await signInWithPopup(auth, googleProvider);
         return true;
       } catch (error) {
         console.error("Erro no login Google:", error);
         if (error.code !== 'auth/popup-closed-by-user') {
-          alert("Erro ao realizar login com o Google. Verifique se o domínio do seu repositório no GitHub Pages foi adicionado aos 'Domínios Autorizados' no Console do Firebase.");
+          alert("Erro ao realizar login com o Google. Verifique se o domínio do seu site está autorizado no Firebase.");
         }
         return false;
       }
     }
 
     function ouvirAutenticacao() {
-      onAuthStateChanged(auth, async (user) => {
-        // Validação adicional no disparo de estado do Firebase
-        if (user && user.email && !user.email.endsWith('@ati.pe.gov.br')) {
-          alert(`O e-mail ${user.email} não possui autorização de escrita.`);
-          await signOut(auth);
-          usuarioLogado = null;
-          return;
-        }
-
+      onAuthStateChanged(auth, (user) => {
         usuarioLogado = user;
         const authSection = document.getElementById('authSection');
 
@@ -460,8 +445,8 @@
 
       document.getElementById('formEvento').addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!usuarioLogado || !usuarioLogado.email.endsWith('@ati.pe.gov.br')) {
-          return alert('Apenas contas institucionais @ati.pe.gov.br têm permissão para gravar eventos.');
+        if (!usuarioLogado) {
+          return alert('É necessário realizar login para gravar eventos.');
         }
 
         const id = document.getElementById('eventoId').value;
@@ -493,13 +478,13 @@
           fecharModal('modalEvento');
         } catch (err) {
           console.error("Erro ao salvar:", err);
-          alert("Não foi possível salvar o evento. Verifique se as regras do seu Firestore no Console do Firebase foram atualizadas.");
+          alert("Não foi possível salvar o evento. Verifique as permissões no banco do Firebase.");
         }
       });
 
       document.getElementById('btnExcluirEvento').addEventListener('click', async () => {
-        if (!usuarioLogado || !usuarioLogado.email.endsWith('@ati.pe.gov.br')) {
-          return alert('Apenas contas @ati.pe.gov.br podem excluir eventos.');
+        if (!usuarioLogado) {
+          return alert('É necessário realizar login para excluir eventos.');
         }
 
         if (eventoSelecionado && confirm('Excluir este evento do calendário?')) {
