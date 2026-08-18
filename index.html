@@ -29,27 +29,27 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
 
-  <!-- Header NAVEGAÇÃO COM FUNDO AZUL INSTITUCIONAL E LOGO -->
+  <!-- Header NAVEGAÇÃO COM FUNDO AZUL INSTITUCIONAL E LOGO EXPANDIDA/MAXIMIZADA -->
   <header class="bg-blue-900 border-b border-blue-800 sticky top-0 z-30 shadow-md">
-    <div class="max-w-7xl mx-auto px-4 py-5 flex flex-wrap items-center justify-between gap-6">
+    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center justify-between gap-6">
       
-      <!-- Marca / Logotipo do Governo + ATI -->
-      <div class="flex items-center">
+      <!-- Marca / Logotipo do Governo + ATI (Tamanho Maximizado em Destaque) -->
+      <div class="flex items-center min-h-[100px]">
         <img 
           src="logo-ati.png" 
           alt="Governo de Pernambuco - ATI" 
-          class="h-24 md:h-28 max-h-32 w-auto object-contain transition-all py-1" 
+          class="h-36 md:h-44 max-h-52 w-auto object-contain transition-all py-1 drop-shadow-md" 
           onerror="this.style.display='none'; document.getElementById('logoFallback').classList.remove('hidden');"
         >
         
         <!-- Fallback em texto caso a imagem não seja carregada -->
         <div id="logoFallback" class="hidden flex items-center gap-3">
-          <div class="bg-blue-800 text-white p-3 rounded-xl">
-            <i data-lucide="building-2" class="w-8 h-8"></i>
+          <div class="bg-blue-800 text-white p-4 rounded-2xl">
+            <i data-lucide="building-2" class="w-10 h-10"></i>
           </div>
           <div>
-            <h1 class="text-xl font-bold text-white leading-tight">GOVERNO DE PERNAMBUCO</h1>
-            <p class="text-xs text-blue-200 font-medium">ATI - Agência Estadual de Tecnologia da Informação</p>
+            <h1 class="text-2xl font-black text-white leading-tight">GOVERNO DE PERNAMBUCO</h1>
+            <p class="text-sm text-blue-200 font-bold">ATI - Agência Estadual de Tecnologia da Informação</p>
           </div>
         </div>
       </div>
@@ -489,9 +489,9 @@
     import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // --- CONFIGURAÇÃO EMAILJS ---
-    const EMAILJS_PUBLIC_KEY = "UXKSoRyQttbLnsYGP";  // Insira sua Public Key do EmailJS
-    const EMAILJS_SERVICE_ID = "service_rpqs4ba";  // Insira seu Service ID do EmailJS
-    const EMAILJS_TEMPLATE_ID = "template_4h9tkxd"; // Insira seu Template ID do EmailJS
+    const EMAILJS_PUBLIC_KEY = "SUA_PUBLIC_KEY";  // Insira sua Public Key do EmailJS
+    const EMAILJS_SERVICE_ID = "SUA_SERVICE_ID";  // Insira seu Service ID do EmailJS
+    const EMAILJS_TEMPLATE_ID = "SEU_TEMPLATE_ID"; // Insira seu Template ID do EmailJS
     
     if (window.emailjs && EMAILJS_PUBLIC_KEY !== "SUA_PUBLIC_KEY") {
       emailjs.init(EMAILJS_PUBLIC_KEY);
