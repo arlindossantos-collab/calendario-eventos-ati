@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendário de Eventos ATI</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FullCalendar CSS & JS -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    .fc { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .fc-event { border: none !important; border-radius: 6px !important; padding: 2px 5px !important; cursor: pointer; }
+    .fc-event-title { font-weight: 600 !important; font-size: 0.85rem !important; }
+    .fc-toolbar-title { font-size: 1.3rem !important; font-weight: 700 !important; color: #0f172a; }
+    .fc-button-primary { background-color: #2563eb !important; border-color: #2563eb !important; border-radius: 0.5rem !important; font-weight: 500 !important; }
+    .fc-button-primary:hover { background-color: #1d4ed8 !important; border-color: #1d4ed8 !important; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+      
+      <!-- Marca -->
+      <div class="flex items-center gap-3">
+        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md">
+          <i data-lucide="calendar" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-slate-900 leading-tight">Calendário de Eventos ATI</h1>
+          <p class="text-xs text-slate-500 font-medium">Agência Estadual de Tecnologia da Informação</p>
+        </div>
+      </div>
+
+      <!-- Ações de Header -->
+      <div class="flex items-center gap-3">
+        <button id="btnHeaderCriar" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition shadow-sm">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> Criar Evento
+        </button>
+        <div id="authSection" class="flex items-center gap-2 border-l border-slate-200 pl-3">
+          <!-- Status de Auth e Botão do Google -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Container Principal -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-4 gap-6">
+    
+    <!-- Barra Lateral: Ação Principal e Filtros -->
+    <aside class="lg:col-span-1 flex flex-col gap-4">
+      
+      <!-- Botão Criar Evento -->
+      <button id="btnCriarEvento" class="w-full bg-white hover:bg-slate-50 text-slate-800 font-semibold py-3.5 px-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-start gap-3 transition-all hover:shadow-md">
+        <div class="bg-blue-600 text-white p-2 rounded-full">
+          <i data-lucide="plus" class="w-5 h-5"></i>
+        </div>
+        <span class="text-base">Criar evento</span>
+      </button>
+
+      <!-- Painel de Filtros -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <h2 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
+          <i data-lucide="filter" class="w-4 h-4 text-blue-600"></i> Buscar e Filtrar
+        </h2>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Pesquisar por texto</label>
+          <div class="relative">
+            <input type="text" id="filtroTexto" placeholder="Título, pauta, palestrante..." class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Data Início</label>
+            <input type="date" id="filtroDataInicio" class="w-full p-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Data Fim</label>
+            <input type="date" id="filtroDataFim" class="w-full p-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Área / Categoria</label>
+          <select id="filtroCategoria" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Todas as áreas</option>
+            <option value="Segurança da Informação">Segurança da Informação</option>
+            <option value="Inteligência Artificial">Inteligência Artificial</option>
+            <option value="Desenvolvimento de Software">Desenvolvimento de Software</option>
+            <option value="Infraestrutura e Backup">Infraestrutura e Backup</option>
+            <option value="Gestão e TIC">Gestão e TIC</option>
+            <option value="Geral (Não Tecnologia)">Geral (Não Tecnologia)</option>
+          </select>
+        </div>
+
+        <button id="btnLimparFiltros" class="w-full py-1.5 text-xs text-slate-500 hover:text-slate-800 transition text-center underline">
+          Limpar Filtros
+        </button>
+      </div>
+    </aside>
+
+    <!-- Visualização do Calendário -->
+    <section class="lg:col-span-3 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+      <div id="calendar"></div>
+    </section>
+  </main>
+
+  <!-- Modal: Criar / Editar Evento -->
+  <div id="modalEvento" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center z-50 p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl my-6 overflow-hidden border border-slate-100">
+      
+      <div class="bg-slate-50 px-6 py-3 border-b border-slate-100 flex justify-between items-center">
+        <span id="modalEventoHeader" class="text-xs font-semibold uppercase tracking-wider text-slate-500">Agendar Evento</span>
+        <button onclick="fecharModal('modalEvento')" class="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200/50">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="formEvento" class="p-6 space-y-4">
+        <input type="hidden" id="eventoId">
+
+        <div>
+          <input type="text" id="titulo" required placeholder="Adicionar título do evento" class="w-full text-2xl font-semibold border-b-2 border-slate-200 pb-1.5 outline-none focus:border-blue-600 transition placeholder-slate-400">
+        </div>
+
+        <div class="flex items-start gap-3">
+          <i data-lucide="clock" class="w-5 h-5 text-slate-400 mt-2"></i>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Início</label>
+              <input type="datetime-local" id="dataInicio" required class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Término</label>
+              <input type="datetime-local" id="dataFim" required class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3">
+          <i data-lucide="mail" class="w-5 h-5 text-slate-400 mt-2"></i>
+          <div class="w-full">
+            <label class="block text-xs font-medium text-slate-500 mb-1">Adicionar Convidados (E-mails)</label>
+            <input type="text" id="convidados" placeholder="e.g. maria@ati.pe.gov.br, joao@ati.pe.gov.br" class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            <p class="text-[10px] text-slate-400 mt-1">Separe múltiplos e-mails por vírgula.</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <i data-lucide="tag" class="w-5 h-5 text-slate-400"></i>
+          <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-3">
+            <select id="categoriaSelect" required class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="Segurança da Informação">Segurança da Informação</option>
+              <option value="Inteligência Artificial">Inteligência Artificial</option>
+              <option value="Desenvolvimento de Software">Desenvolvimento de Software</option>
+              <option value="Infraestrutura e Backup">Infraestrutura e Backup</option>
+              <option value="Gestão e TIC">Gestão e TIC</option>
+              <option value="Geral (Não Tecnologia)">Geral (Não Tecnologia)</option>
+              <option value="Outro">Outro (Digitar)</option>
+            </select>
+            <div id="campoOutraCategoria" class="hidden">
+              <input type="text" id="outraCategoria" placeholder="Nome da categoria" class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <i data-lucide="map-pin" class="w-5 h-5 text-slate-400"></i>
+          <input type="text" id="local" required placeholder="Local presencial ou link de videochamada" class="w-full p-2 border-b border-slate-200 text-xs outline-none focus:border-blue-600">
+        </div>
+
+        <div class="flex items-start gap-3">
+          <i data-lucide="users" class="w-5 h-5 text-slate-400 mt-2"></i>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+            <input type="text" id="realizador" required placeholder="Quem realiza (Ex: GRGD/ATI)" class="w-full p-2 border-b border-slate-200 text-xs outline-none focus:border-blue-600">
+            <input type="text" id="palestrantes" placeholder="Palestrante(s) / Apresentador" class="w-full p-2 border-b border-slate-200 text-xs outline-none focus:border-blue-600">
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 pl-8">
+          <label class="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-700">
+            <input type="checkbox" id="temCertificado" class="w-4 h-4 text-blue-600 rounded">
+            Gera Certificado
+          </label>
+          <div id="campoHoras" class="hidden flex items-center gap-2">
+            <input type="number" id="horasCertificado" min="1" value="1" class="w-16 p-1 border border-slate-200 rounded text-xs text-center">
+            <span class="text-xs text-slate-500">horas</span>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-3">
+          <i data-lucide="align-left" class="w-5 h-5 text-slate-400 mt-2"></i>
+          <textarea id="descricao" rows="2" placeholder="Pauta ou informações adicionais do evento..." class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="fecharModal('modalEvento')" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+          <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs">Salvar Evento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Detalhes do Evento -->
+  <div id="modalDetalhes" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative border border-slate-100">
+      <div class="flex justify-between items-start mb-3">
+        <span id="detalheCategoria" class="inline-block px-3 py-1 text-[11px] font-bold text-white rounded-full"></span>
+        <button onclick="fecharModal('modalDetalhes')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <h3 id="detalheTitulo" class="text-xl font-bold text-slate-900 mb-3"></h3>
+
+      <div class="space-y-2.5 text-xs text-slate-600 mb-5">
+        <p class="flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-slate-400"></i> <span id="detalheData"></span></p>
+        <p class="flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i> <span id="detalheLocal"></span></p>
+        <p class="flex items-center gap-2"><i data-lucide="building-2" class="w-4 h-4 text-slate-400"></i> Realização: <strong id="detalheRealizador" class="text-slate-800"></strong></p>
+        <p class="flex items-center gap-2"><i data-lucide="user" class="w-4 h-4 text-slate-400"></i> Palestrante: <span id="detalhePalestrantes"></span></p>
+        <p class="flex items-center gap-2"><i data-lucide="award" class="w-4 h-4 text-slate-400"></i> <span id="detalheCertificado"></span></p>
+
+        <div class="border-t border-slate-100 pt-2.5 mt-2.5">
+          <span class="font-semibold text-slate-700 flex items-center gap-1.5 mb-1.5">
+            <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i> Convidados:
+          </span>
+          <div id="detalheConvidadosList" class="flex flex-wrap gap-1"></div>
+        </div>
+        
+        <div class="border-t border-slate-100 pt-2.5 mt-2.5">
+          <h4 class="font-semibold text-slate-800 mb-1">Descrição:</h4>
+          <p id="detalheDescricao" class="whitespace-pre-line text-slate-600 leading-relaxed"></p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap justify-between items-center gap-2 border-t border-slate-100 pt-4">
+        <a id="btnGoogleCalendar" target="_blank" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+          <i data-lucide="calendar-plus" class="w-4 h-4"></i> Salvar na Minha Agenda
+        </a>
+
+        <div id="adminDetalhesActions" class="hidden flex gap-2">
+          <button id="btnEditarEvento" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium">Editar</button>
+          <button id="btnExcluirEvento" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-medium">Excluir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Integration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Credenciais do Projeto Firebase do Usuário
+    const firebaseConfig = {
+      apiKey: "AIzaSyANAPqfHQeoU4zgXn5cHmVFhI0PGgVUvTA",
+      authDomain: "calendario-eventos-ati.firebaseapp.com",
+      projectId: "calendario-eventos-ati",
+      storageBucket: "calendario-eventos-ati.firebasestorage.app",
+      messagingSenderId: "790004139032",
+      appId: "1:790004139032:web:151288e0fad4f827aaef6d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    const CORES_CATEGORIA = {
+      'Segurança da Informação': '#d97706',
+      'Inteligência Artificial': '#8b5cf6',
+      'Desenvolvimento de Software': '#2563eb',
+      'Infraestrutura e Backup': '#059669',
+      'Gestão e TIC': '#dc2626',
+      'Geral (Não Tecnologia)': '#64748b'
+    };
+
+    let calendar;
+    let todosEventos = [];
+    let usuarioLogado = null;
+    let eventoSelecionado = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      inicializarCalendario();
+      ouvirAutenticacao();
+      ouvirEventos();
+      configurarDOM();
+    });
+
+    function inicializarCalendario() {
+      const calendarEl = document.getElementById('calendar');
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'pt-br',
+        selectable: true,
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
+        buttonText: { today: 'Hoje', month: 'Mês', week: 'Semana' },
+        events: [],
+        select: (info) => acionarCriacaoEvento(info.startStr),
+        eventClick: (info) => abrirModalDetalhes(info.event)
+      });
+      calendar.render();
+    }
+
+    // Função para Autenticar via Google Popup
+    async function fazerLoginGoogle() {
+      try {
+        await signInWithPopup(auth, googleProvider);
+      } catch (error) {
+        console.error("Erro no login Google:", error);
+        alert("Erro ao realizar login com o Google. Verifique se o provedor está ativo no Console do Firebase.");
+      }
+    }
+
+    function ouvirAutenticacao() {
+      onAuthStateChanged(auth, (user) => {
+        usuarioLogado = user;
+        const authSection = document.getElementById('authSection');
+
+        if (user) {
+          authSection.innerHTML = `
+            <div class="flex items-center gap-2">
+              <img src="${user.photoURL || 'https://via.placeholder.com/32'}" class="w-7 h-7 rounded-full border border-slate-200" alt="Avatar">
+              <span class="text-xs text-slate-700 font-medium hidden md:inline">${user.displayName || user.email}</span>
+              <button id="btnLogout" class="px-2.5 py-1 text-slate-500 hover:text-slate-800 rounded-lg text-xs font-medium border border-slate-200 hover:bg-slate-50">Sair</button>
+            </div>
+          `;
+          document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
+        } else {
+          authSection.innerHTML = `
+            <button id="btnLoginGoogle" class="flex items-center gap-2 px-3 py-1.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-xs">
+              <svg class="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              Entrar com Google
+            </button>
+          `;
+          document.getElementById('btnLoginGoogle').addEventListener('click', fazerLoginGoogle);
+        }
+        lucide.createIcons();
+      });
+    }
+
+    async function acionarCriacaoEvento(dataInicialStr = null) {
+      if (!usuarioLogado) {
+        await fazerLoginGoogle();
+        if (!auth.currentUser) return;
+      }
+      
+      document.getElementById('formEvento').reset();
+      document.getElementById('eventoId').value = '';
+      document.getElementById('modalEventoHeader').textContent = 'Agendar Novo Evento';
+
+      if (dataInicialStr) {
+        const dataFormatada = dataInicialStr.length === 10 ? `${dataInicialStr}T09:00` : dataInicialStr.substring(0, 16);
+        const dataFimFormatada = dataInicialStr.length === 10 ? `${dataInicialStr}T10:00` : dataInicialStr.substring(0, 16);
+        document.getElementById('dataInicio').value = dataFormatada;
+        document.getElementById('dataFim').value = dataFimFormatada;
+      }
+
+      abrirModal('modalEvento');
+    }
+
+    function ouvirEventos() {
+      onSnapshot(collection(db, "eventos"), (snapshot) => {
+        todosEventos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        aplicarFiltros();
+      });
+    }
+
+    function aplicarFiltros() {
+      const termo = document.getElementById('filtroTexto').value.toLowerCase();
+      const dtInicio = document.getElementById('filtroDataInicio').value;
+      const dtFim = document.getElementById('filtroDataFim').value;
+      const cat = document.getElementById('filtroCategoria').value;
+
+      const filtrados = todosEventos.filter(ev => {
+        const matchTexto = ev.title.toLowerCase().includes(termo) || 
+                           (ev.descricao && ev.descricao.toLowerCase().includes(termo)) ||
+                           (ev.palestrantes && ev.palestrantes.toLowerCase().includes(termo));
+        const matchCat = cat === "" || ev.categoria === cat;
+        
+        let matchData = true;
+        const evStart = ev.start.substring(0, 10);
+        if (dtInicio) matchData = matchData && (evStart >= dtInicio);
+        if (dtFim) matchData = matchData && (evStart <= dtFim);
+
+        return matchTexto && matchCat && matchData;
+      });
+
+      const fcEvents = filtrados.map(ev => ({
+        id: ev.id,
+        title: ev.title,
+        start: ev.start,
+        end: ev.end,
+        backgroundColor: CORES_CATEGORIA[ev.categoria] || '#3b82f6',
+        extendedProps: ev
+      }));
+
+      calendar.removeAllEvents();
+      calendar.addEventSource(fcEvents);
+    }
+
+    function configurarDOM() {
+      document.getElementById('btnCriarEvento').addEventListener('click', () => acionarCriacaoEvento());
+      document.getElementById('btnHeaderCriar').addEventListener('click', () => acionarCriacaoEvento());
+
+      document.getElementById('categoriaSelect').addEventListener('change', (e) => {
+        document.getElementById('campoOutraCategoria').classList.toggle('hidden', e.target.value !== 'Outro');
+      });
+      document.getElementById('temCertificado').addEventListener('change', (e) => {
+        document.getElementById('campoHoras').classList.toggle('hidden', !e.target.checked);
+      });
+
+      document.getElementById('filtroTexto').addEventListener('input', aplicarFiltros);
+      document.getElementById('filtroCategoria').addEventListener('change', aplicarFiltros);
+      document.getElementById('filtroDataInicio').addEventListener('change', aplicarFiltros);
+      document.getElementById('filtroDataFim').addEventListener('change', aplicarFiltros);
+      
+      document.getElementById('btnLimparFiltros').addEventListener('click', () => {
+        document.getElementById('filtroTexto').value = '';
+        document.getElementById('filtroCategoria').value = '';
+        document.getElementById('filtroDataInicio').value = '';
+        document.getElementById('filtroDataFim').value = '';
+        aplicarFiltros();
+      });
+
+      document.getElementById('formEvento').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!usuarioLogado) return alert('Autenticação necessária.');
+
+        const id = document.getElementById('eventoId').value;
+        const catSelect = document.getElementById('categoriaSelect').value;
+        const categoria = catSelect === 'Outro' ? document.getElementById('outraCategoria').value : catSelect;
+
+        const data = {
+          title: document.getElementById('titulo').value,
+          categoria: categoria,
+          start: document.getElementById('dataInicio').value,
+          end: document.getElementById('dataFim').value,
+          convidados: document.getElementById('convidados').value || '',
+          local: document.getElementById('local').value,
+          realizador: document.getElementById('realizador').value,
+          palestrantes: document.getElementById('palestrantes').value || 'A definir',
+          temCertificado: document.getElementById('temCertificado').checked,
+          horasCertificado: document.getElementById('temCertificado').checked ? document.getElementById('horasCertificado').value : 0,
+          descricao: document.getElementById('descricao').value,
+          autorUid: usuarioLogado.uid,
+          autorEmail: usuarioLogado.email
+        };
+
+        if (id) {
+          await updateDoc(doc(db, "eventos", id), data);
+        } else {
+          await addDoc(collection(db, "eventos"), data);
+        }
+
+        fecharModal('modalEvento');
+      });
+
+      document.getElementById('btnExcluirEvento').addEventListener('click', async () => {
+        if (eventoSelecionado && confirm('Excluir este evento do calendário?')) {
+          await deleteDoc(doc(db, "eventos", eventoSelecionado.id));
+          fecharModal('modalDetalhes');
+        }
+      });
+
+      document.getElementById('btnEditarEvento').addEventListener('click', () => {
+        const props = eventoSelecionado.extendedProps;
+        document.getElementById('eventoId').value = eventoSelecionado.id;
+        document.getElementById('titulo').value = props.title;
+        document.getElementById('dataInicio').value = props.start;
+        document.getElementById('dataFim').value = props.end;
+        document.getElementById('convidados').value = props.convidados || '';
+        document.getElementById('local').value = props.local;
+        document.getElementById('realizador').value = props.realizador;
+        document.getElementById('palestrantes').value = props.palestrantes;
+        document.getElementById('descricao').value = props.descricao;
+        document.getElementById('temCertificado').checked = props.temCertificado;
+
+        fecharModal('modalDetalhes');
+        document.getElementById('modalEventoHeader').textContent = 'Editar Agendamento';
+        abrirModal('modalEvento');
+      });
+    }
+
+    function abrirModalDetalhes(fcEvent) {
+      eventoSelecionado = fcEvent;
+      const props = fcEvent.extendedProps;
+
+      document.getElementById('detalheTitulo').textContent = props.title;
+      document.getElementById('detalheCategoria').textContent = props.categoria;
+      document.getElementById('detalheCategoria').style.backgroundColor = fcEvent.backgroundColor;
+      document.getElementById('detalheData').textContent = `${new Date(props.start).toLocaleString('pt-BR')} até ${new Date(props.end).toLocaleString('pt-BR')}`;
+      document.getElementById('detalheLocal').textContent = props.local;
+      document.getElementById('detalheRealizador').textContent = props.realizador;
+      document.getElementById('detalhePalestrantes').textContent = props.palestrantes;
+      document.getElementById('detalheCertificado').textContent = props.temCertificado ? `Gera certificado (${props.horasCertificado}h)` : 'Sem certificado';
+      document.getElementById('detalheDescricao').textContent = props.descricao || 'Nenhuma pauta informada.';
+
+      const listContainer = document.getElementById('detalheConvidadosList');
+      if (props.convidados && props.convidados.trim() !== '') {
+        const listaEmails = props.convidados.split(',').map(e => e.trim()).filter(e => e !== '');
+        listContainer.innerHTML = listaEmails.map(email => `
+          <span class="inline-block bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200">${email}</span>
+        `).join('');
+      } else {
+        listContainer.innerHTML = `<span class="text-slate-400 italic text-[11px]">Nenhum convidado cadastrado.</span>`;
+      }
+
+      const gStart = new Date(props.start).toISOString().replace(/-|:|\.\d\d\d/g, "");
+      const gEnd = new Date(props.end).toISOString().replace(/-|:|\.\d\d\d/g, "");
+      const gUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(props.title)}&dates=${gStart}/${gEnd}&details=${encodeURIComponent(props.descricao)}&location=${encodeURIComponent(props.local)}&add=${encodeURIComponent(props.convidados || '')}`;
+      document.getElementById('btnGoogleCalendar').href = gUrl;
+
+      document.getElementById('adminDetalhesActions').classList.toggle('hidden', !usuarioLogado);
+      abrirModal('modalDetalhes');
+    }
+
+    window.abrirModal = (id) => document.getElementById(id).classList.replace('hidden', 'flex');
+    window.fecharModal = (id) => document.getElementById(id).classList.replace('flex', 'hidden');
+  </script>
+</body>
+</html>
+
+
