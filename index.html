@@ -11,6 +11,8 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- HTML2PDF para geração de certificados em PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
     .fc { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -39,13 +41,14 @@
       </div>
 
       <!-- Ações de Header -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 md:gap-3">
+        <button id="btnMetrics" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+          <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-600"></i> Métricas ATI
+        </button>
         <button id="btnHeaderCriar" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition shadow-sm">
           <i data-lucide="plus-circle" class="w-4 h-4"></i> Criar Evento
         </button>
-        <div id="authSection" class="flex items-center gap-2 border-l border-slate-200 pl-3">
-          <!-- Status de Auth e Botão do Google -->
-        </div>
+        <div id="authSection" class="flex items-center gap-2 border-l border-slate-200 pl-3"></div>
       </div>
     </div>
   </header>
@@ -53,10 +56,8 @@
   <!-- Container Principal -->
   <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-4 gap-6">
     
-    <!-- Barra Lateral: Ação Principal e Filtros -->
+    <!-- Barra Lateral -->
     <aside class="lg:col-span-1 flex flex-col gap-4">
-      
-      <!-- Botão Criar Evento -->
       <button id="btnCriarEvento" class="w-full bg-white hover:bg-slate-50 text-slate-800 font-semibold py-3.5 px-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-start gap-3 transition-all hover:shadow-md">
         <div class="bg-blue-600 text-white p-2 rounded-full">
           <i data-lucide="plus" class="w-5 h-5"></i>
@@ -146,12 +147,22 @@
           </div>
         </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pl-8">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Limite de Vagas (0 = ilimitado)</label>
+            <input type="number" id="limiteVagas" min="0" value="0" class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Link Transmissão (Meet/Teams)</label>
+            <input type="url" id="linkMeet" placeholder="https://meet.google.com/..." class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+
         <div class="flex items-start gap-3">
           <i data-lucide="mail" class="w-5 h-5 text-slate-400 mt-2"></i>
           <div class="w-full">
-            <label class="block text-xs font-medium text-slate-500 mb-1">Adicionar Convidados (E-mails)</label>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Convidados Diretos (E-mails)</label>
             <input type="text" id="convidados" placeholder="e.g. maria@ati.pe.gov.br, joao@gmail.com" class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
-            <p class="text-[10px] text-slate-400 mt-1">Separe múltiplos e-mails por vírgula.</p>
           </div>
         </div>
 
@@ -175,7 +186,7 @@
 
         <div class="flex items-center gap-3">
           <i data-lucide="map-pin" class="w-5 h-5 text-slate-400"></i>
-          <input type="text" id="local" required placeholder="Local presencial ou link de videochamada" class="w-full p-2 border-b border-slate-200 text-xs outline-none focus:border-blue-600">
+          <input type="text" id="local" required placeholder="Local presencial ou link da reunião" class="w-full p-2 border-b border-slate-200 text-xs outline-none focus:border-blue-600">
         </div>
 
         <div class="flex items-start gap-3">
@@ -198,8 +209,13 @@
         </div>
 
         <div class="flex items-start gap-3">
+          <i data-lucide="file-text" class="w-5 h-5 text-slate-400 mt-2"></i>
+          <input type="url" id="linkMaterial" placeholder="Link dos Slides/Material de Apoio (Drive, PDF...)" class="w-full p-2 border-b border-slate-200 text-xs outline-none focus:border-blue-600">
+        </div>
+
+        <div class="flex items-start gap-3">
           <i data-lucide="align-left" class="w-5 h-5 text-slate-400 mt-2"></i>
-          <textarea id="descricao" rows="2" placeholder="Pauta ou informações adicionais do evento..." class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+          <textarea id="descricao" rows="2" placeholder="Pauta ou informações adicionais..." class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500"></textarea>
         </div>
 
         <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
@@ -210,9 +226,9 @@
     </div>
   </div>
 
-  <!-- Modal: Detalhes do Evento -->
+  <!-- Modal: Detalhes do Evento & Inscrição -->
   <div id="modalDetalhes" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative border border-slate-100">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 relative border border-slate-100 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-start mb-3">
         <span id="detalheCategoria" class="inline-block px-3 py-1 text-[11px] font-bold text-white rounded-full"></span>
         <button onclick="fecharModal('modalDetalhes')" class="text-slate-400 hover:text-slate-600">
@@ -220,7 +236,18 @@
         </button>
       </div>
 
-      <h3 id="detalheTitulo" class="text-xl font-bold text-slate-900 mb-3"></h3>
+      <h3 id="detalheTitulo" class="text-xl font-bold text-slate-900 mb-2"></h3>
+      
+      <!-- Status de Inscrições / Vagas -->
+      <div id="boxStatusVagas" class="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between text-xs">
+        <div>
+          <span class="font-semibold text-blue-900">Status das Vagas:</span>
+          <span id="txtVagasContador" class="text-blue-700 ml-1">Carregando...</span>
+        </div>
+        <button id="btnInscrever" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-semibold transition">
+          Inscrever-se
+        </button>
+      </div>
 
       <div class="space-y-2.5 text-xs text-slate-600 mb-5">
         <p class="flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-slate-400"></i> <span id="detalheData"></span></p>
@@ -229,22 +256,43 @@
         <p class="flex items-center gap-2"><i data-lucide="user" class="w-4 h-4 text-slate-400"></i> Palestrante: <span id="detalhePalestrantes"></span></p>
         <p class="flex items-center gap-2"><i data-lucide="award" class="w-4 h-4 text-slate-400"></i> <span id="detalheCertificado"></span></p>
 
-        <div class="border-t border-slate-100 pt-2.5 mt-2.5">
-          <span class="font-semibold text-slate-700 flex items-center gap-1.5 mb-1.5">
-            <i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i> Convidados:
-          </span>
-          <div id="detalheConvidadosList" class="flex flex-wrap gap-1"></div>
+        <div id="boxMaterialApoio" class="hidden pt-1">
+          <a id="linkMaterialBtn" target="_blank" class="inline-flex items-center gap-1.5 text-blue-600 hover:underline font-medium">
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Acessar Material de Apoio / Slides
+          </a>
         </div>
-        
+
         <div class="border-t border-slate-100 pt-2.5 mt-2.5">
-          <h4 class="font-semibold text-slate-800 mb-1">Descrição:</h4>
+          <h4 class="font-semibold text-slate-800 mb-1">Descrição / Pauta:</h4>
           <p id="detalheDescricao" class="whitespace-pre-line text-slate-600 leading-relaxed"></p>
+        </div>
+
+        <!-- Seção do Certificado em PDF -->
+        <div id="boxEmitirCertificado" class="hidden border-t border-emerald-100 bg-emerald-50 p-3 rounded-xl mt-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-bold text-emerald-900">Seu certificado está disponível!</p>
+              <p class="text-[11px] text-emerald-700">Sua presença foi confirmada pelo organizador.</p>
+            </div>
+            <button id="btnBaixarCertificado" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i> PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Chamada / Credenciamento (Apenas Organizadores) -->
+        <div id="adminChamadaBox" class="hidden border-t border-slate-200 pt-3 mt-3">
+          <h4 class="font-bold text-slate-800 mb-2 flex items-center justify-between">
+            <span>Lista de Inscritos & Chamada</span>
+            <span id="totalInscritosBadge" class="bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 rounded-full"></span>
+          </h4>
+          <div id="listaInscritosChamada" class="space-y-1.5 max-h-36 overflow-y-auto pr-1"></div>
         </div>
       </div>
 
       <div class="flex flex-wrap justify-between items-center gap-2 border-t border-slate-100 pt-4">
         <a id="btnGoogleCalendar" target="_blank" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
-          <i data-lucide="calendar-plus" class="w-4 h-4"></i> Salvar na Minha Agenda
+          <i data-lucide="calendar-plus" class="w-4 h-4"></i> Salvar no Google Agenda
         </a>
 
         <div id="adminDetalhesActions" class="hidden flex gap-2">
@@ -255,13 +303,75 @@
     </div>
   </div>
 
-  <!-- Firebase Integration -->
+  <!-- Modal: Métricas e Indicadores ATI -->
+  <div id="modalMetrics" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6 relative">
+      <div class="flex justify-between items-center mb-4 border-b pb-3">
+        <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="bar-chart-3" class="w-5 h-5 text-blue-600"></i> Painel de Métricas e Capacitações ATI
+        </h3>
+        <button onclick="fecharModal('modalMetrics')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl text-center">
+          <span class="block text-2xl font-bold text-blue-700" id="metricTotalEventos">0</span>
+          <span class="text-[11px] font-medium text-blue-900">Eventos Realizados</span>
+        </div>
+        <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-xl text-center">
+          <span class="block text-2xl font-bold text-emerald-700" id="metricTotalHoras">0h</span>
+          <span class="text-[11px] font-medium text-emerald-900">Horas de Treinamento</span>
+        </div>
+        <div class="bg-purple-50 border border-purple-100 p-4 rounded-xl text-center">
+          <span class="block text-2xl font-bold text-purple-700" id="metricTotalCertificados">0</span>
+          <span class="text-[11px] font-medium text-purple-900">Certificados Emitidos</span>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button onclick="fecharModal('modalMetrics')" class="px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-semibold">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Template Oculto para Impressão do Certificado em PDF -->
+  <div id="certTemplate" class="hidden p-10 bg-white border-8 border-blue-900 text-center text-slate-800 w-[800px] h-[580px] relative">
+    <div class="border-2 border-amber-500 h-full p-8 flex flex-col justify-between">
+      <div>
+        <h1 class="text-3xl font-extrabold text-blue-900 uppercase tracking-widest mb-1">CERTIFICADO DE PARTICIPAÇÃO</h1>
+        <p class="text-xs text-slate-500 font-semibold uppercase">Agência Estadual de Tecnologia da Informação - ATI PE</p>
+      </div>
+
+      <div class="my-6">
+        <p class="text-sm text-slate-600 mb-2">Certificamos que</p>
+        <p id="certNomeUser" class="text-2xl font-bold text-slate-900 border-b-2 border-slate-300 pb-1 inline-block px-4 mb-4"></p>
+        <p class="text-sm text-slate-600 leading-relaxed max-w-xl mx-auto">
+          participou do evento <strong id="certNomeEvento" class="text-blue-900"></strong>, realizado em 
+          <span id="certDataEvento"></span>, com carga horária total de <strong id="certHoras"></strong> hora(s).
+        </p>
+      </div>
+
+      <div class="flex justify-between items-end text-left text-[10px] text-slate-400 border-t pt-4">
+        <div>
+          <p><strong>ATI Pernambuco</strong></p>
+          <p>Governo do Estado de Pernambuco</p>
+        </div>
+        <div class="text-right">
+          <p>Código de Autenticidade:</p>
+          <p id="certCodigoAuth" class="font-mono text-slate-600 font-bold"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase & Scripts da Aplicação -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Credenciais do Projeto Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyANAPqfHQeoU4zgXn5cHmVFhI0PGgVUvTA",
       authDomain: "calendario-eventos-ati.firebaseapp.com",
@@ -313,22 +423,13 @@
       calendar.render();
     }
 
-    // Função de Login via Google com Log Detalhado de Erros para Depuração
     async function fazerLoginGoogle() {
       try {
         await signInWithPopup(auth, googleProvider);
         return true;
       } catch (error) {
-        console.error("Erro completo no login Google:", error);
-        
-        // Alerta de depuração com detalhes técnicos
-        alert(
-          `FALHA NA AUTENTICAÇÃO DO GOOGLE\n` +
-          `----------------------------------------\n` +
-          `Código: ${error.code}\n` +
-          `Mensagem: ${error.message}\n` +
-          `Origem do App: ${window.location.origin}`
-        );
+        console.error("Erro no login Google:", error);
+        alert(`FALHA NA AUTENTICAÇÃO DO GOOGLE\nCódigo: ${error.code}\nMensagem: ${error.message}`);
         return false;
       }
     }
@@ -389,6 +490,7 @@
       onSnapshot(collection(db, "eventos"), (snapshot) => {
         todosEventos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         aplicarFiltros();
+        calcularMetricas();
       });
     }
 
@@ -425,9 +527,28 @@
       calendar.addEventSource(fcEvents);
     }
 
+    function calcularMetricas() {
+      let totalHoras = 0;
+      let totalCertificados = 0;
+
+      todosEventos.forEach(ev => {
+        if (ev.temCertificado) {
+          totalHoras += parseInt(ev.horasCertificado || 0);
+        }
+        if (ev.inscritos) {
+          totalCertificados += ev.inscritos.filter(i => i.presente).length;
+        }
+      });
+
+      document.getElementById('metricTotalEventos').textContent = todosEventos.length;
+      document.getElementById('metricTotalHoras').textContent = `${totalHoras}h`;
+      document.getElementById('metricTotalCertificados').textContent = totalCertificados;
+    }
+
     function configurarDOM() {
       document.getElementById('btnCriarEvento').addEventListener('click', () => acionarCriacaoEvento());
       document.getElementById('btnHeaderCriar').addEventListener('click', () => acionarCriacaoEvento());
+      document.getElementById('btnMetrics').addEventListener('click', () => abrirModal('modalMetrics'));
 
       document.getElementById('categoriaSelect').addEventListener('change', (e) => {
         document.getElementById('campoOutraCategoria').classList.toggle('hidden', e.target.value !== 'Outro');
@@ -449,11 +570,10 @@
         aplicarFiltros();
       });
 
+      // Salvar Evento
       document.getElementById('formEvento').addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!usuarioLogado) {
-          return alert('É necessário realizar login para gravar eventos.');
-        }
+        if (!usuarioLogado) return alert('É necessário realizar login para gravar eventos.');
 
         const id = document.getElementById('eventoId').value;
         const catSelect = document.getElementById('categoriaSelect').value;
@@ -464,12 +584,15 @@
           categoria: categoria,
           start: document.getElementById('dataInicio').value,
           end: document.getElementById('dataFim').value,
+          limiteVagas: parseInt(document.getElementById('limiteVagas').value) || 0,
+          linkMeet: document.getElementById('linkMeet').value || '',
           convidados: document.getElementById('convidados').value || '',
           local: document.getElementById('local').value,
           realizador: document.getElementById('realizador').value,
           palestrantes: document.getElementById('palestrantes').value || 'A definir',
           temCertificado: document.getElementById('temCertificado').checked,
           horasCertificado: document.getElementById('temCertificado').checked ? document.getElementById('horasCertificado').value : 0,
+          linkMaterial: document.getElementById('linkMaterial').value || '',
           descricao: document.getElementById('descricao').value,
           autorUid: usuarioLogado.uid,
           autorEmail: usuarioLogado.email
@@ -479,28 +602,76 @@
           if (id) {
             await updateDoc(doc(db, "eventos", id), data);
           } else {
+            data.inscritos = [];
             await addDoc(collection(db, "eventos"), data);
           }
           fecharModal('modalEvento');
         } catch (err) {
           console.error("Erro ao salvar:", err);
-          alert(`Erro ao salvar evento no Firestore:\n${err.message}`);
+          alert(`Erro ao salvar evento:\n${err.message}`);
         }
       });
 
-      document.getElementById('btnExcluirEvento').addEventListener('click', async () => {
+      // Inscrever / Cancelar Inscrição
+      document.getElementById('btnInscrever').addEventListener('click', async () => {
         if (!usuarioLogado) {
-          return alert('É necessário realizar login para excluir eventos.');
+          const ok = await fazerLoginGoogle();
+          if (!ok) return;
         }
 
-        if (eventoSelecionado && confirm('Excluir este evento do calendário?')) {
-          try {
-            await deleteDoc(doc(db, "eventos", eventoSelecionado.id));
-            fecharModal('modalDetalhes');
-          } catch (err) {
-            console.error("Erro ao excluir:", err);
-            alert(`Erro ao excluir evento:\n${err.message}`);
+        const props = eventoSelecionado.extendedProps;
+        let inscritos = props.inscritos || [];
+        const indexInscrito = inscritos.findIndex(i => i.email === usuarioLogado.email);
+
+        if (indexInscrito >= 0) {
+          inscritos.splice(indexInscrito, 1); // Cancelar inscrição
+        } else {
+          if (props.limiteVagas > 0 && inscritos.length >= props.limiteVagas) {
+            return alert('As vagas para este evento já se esgotaram.');
           }
+          inscritos.push({
+            email: usuarioLogado.email,
+            nome: usuarioLogado.displayName || usuarioLogado.email,
+            data: new Date().toISOString(),
+            presente: false
+          });
+        }
+
+        await updateDoc(doc(db, "eventos", eventoSelecionado.id), { inscritos });
+        fecharModal('modalDetalhes');
+      });
+
+      // Baixar Certificado PDF
+      document.getElementById('btnBaixarCertificado').addEventListener('click', () => {
+        const props = eventoSelecionado.extendedProps;
+        document.getElementById('certNomeUser').textContent = usuarioLogado.displayName || usuarioLogado.email;
+        document.getElementById('certNomeEvento').textContent = props.title;
+        document.getElementById('certDataEvento').textContent = new Date(props.start).toLocaleDateString('pt-BR');
+        document.getElementById('certHoras').textContent = props.horasCertificado;
+        document.getElementById('certCodigoAuth').textContent = `ATI-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+
+        const element = document.getElementById('certTemplate');
+        element.classList.remove('hidden');
+
+        const opt = {
+          margin: 0,
+          filename: `Certificado_${props.title.replace(/\s+/g, '_')}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: 'pt', format: 'a4', orientation: 'landscape' }
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+          element.classList.add('hidden');
+        });
+      });
+
+      // Excluir e Editar
+      document.getElementById('btnExcluirEvento').addEventListener('click', async () => {
+        if (!usuarioLogado) return alert('É necessário realizar login.');
+        if (eventoSelecionado && confirm('Excluir este evento do calendário?')) {
+          await deleteDoc(doc(db, "eventos", eventoSelecionado.id));
+          fecharModal('modalDetalhes');
         }
       });
 
@@ -510,10 +681,13 @@
         document.getElementById('titulo').value = props.title;
         document.getElementById('dataInicio').value = props.start;
         document.getElementById('dataFim').value = props.end;
+        document.getElementById('limiteVagas').value = props.limiteVagas || 0;
+        document.getElementById('linkMeet').value = props.linkMeet || '';
         document.getElementById('convidados').value = props.convidados || '';
         document.getElementById('local').value = props.local;
         document.getElementById('realizador').value = props.realizador;
         document.getElementById('palestrantes').value = props.palestrantes;
+        document.getElementById('linkMaterial').value = props.linkMaterial || '';
         document.getElementById('descricao').value = props.descricao;
         document.getElementById('temCertificado').checked = props.temCertificado;
 
@@ -526,6 +700,7 @@
     function abrirModalDetalhes(fcEvent) {
       eventoSelecionado = fcEvent;
       const props = fcEvent.extendedProps;
+      const inscritos = props.inscritos || [];
 
       document.getElementById('detalheTitulo').textContent = props.title;
       document.getElementById('detalheCategoria').textContent = props.categoria;
@@ -537,14 +712,56 @@
       document.getElementById('detalheCertificado').textContent = props.temCertificado ? `Gera certificado (${props.horasCertificado}h)` : 'Sem certificado';
       document.getElementById('detalheDescricao').textContent = props.descricao || 'Nenhuma pauta informada.';
 
-      const listContainer = document.getElementById('detalheConvidadosList');
-      if (props.convidados && props.convidados.trim() !== '') {
-        const listaEmails = props.convidados.split(',').map(e => e.trim()).filter(e => e !== '');
-        listContainer.innerHTML = listaEmails.map(email => `
-          <span class="inline-block bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200">${email}</span>
-        `).join('');
+      // Material de apoio
+      const boxMat = document.getElementById('boxMaterialApoio');
+      if (props.linkMaterial) {
+        boxMat.classList.remove('hidden');
+        document.getElementById('linkMaterialBtn').href = props.linkMaterial;
       } else {
-        listContainer.innerHTML = `<span class="text-slate-400 italic text-[11px]">Nenhum convidado cadastrado.</span>`;
+        boxMat.classList.add('hidden');
+      }
+
+      // Vagas e Inscrição
+      const btnInscr = document.getElementById('btnInscrever');
+      const txtVagas = document.getElementById('txtVagasContador');
+      const totalVagasText = props.limiteVagas > 0 ? `${inscritos.length}/${props.limiteVagas} vagas` : `${inscritos.length} inscritos (Vagas Ilimitadas)`;
+      txtVagas.textContent = totalVagasText;
+
+      const jaInscrito = usuarioLogado && inscritos.some(i => i.email === usuarioLogado.email);
+      if (jaInscrito) {
+        btnInscr.textContent = 'Cancelar Inscrição';
+        btnInscr.className = 'bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg font-semibold transition';
+      } else {
+        btnInscr.textContent = 'Garantir Vaga';
+        btnInscr.className = 'bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-semibold transition';
+      }
+
+      // Certificado Liberado?
+      const boxCert = document.getElementById('boxEmitirCertificado');
+      const meuRegistro = usuarioLogado && inscritos.find(i => i.email === usuarioLogado.email);
+      if (props.temCertificado && meuRegistro && meuRegistro.presente) {
+        boxCert.classList.remove('hidden');
+      } else {
+        boxCert.classList.add('hidden');
+      }
+
+      // Painel Admin Chamada
+      const adminChamada = document.getElementById('adminChamadaBox');
+      if (usuarioLogado) {
+        adminChamada.classList.remove('hidden');
+        document.getElementById('totalInscritosBadge').textContent = `${inscritos.length} inscritos`;
+        
+        const listaEl = document.getElementById('listaInscritosChamada');
+        listaEl.innerHTML = inscritos.length ? inscritos.map((ins, idx) => `
+          <div class="flex items-center justify-between text-xs p-1.5 bg-slate-50 rounded border border-slate-100">
+            <span class="truncate max-w-[220px] font-medium text-slate-700">${ins.nome}</span>
+            <button onclick="window.alternarPresenca(${idx})" class="px-2 py-0.5 rounded text-[10px] font-bold ${ins.presente ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
+              ${ins.presente ? '✓ Presente' : 'Marcar Presença'}
+            </button>
+          </div>
+        `).join('') : '<p class="text-slate-400 italic text-[11px]">Nenhum inscrito até o momento.</p>';
+      } else {
+        adminChamada.classList.add('hidden');
       }
 
       const gStart = new Date(props.start).toISOString().replace(/-|:|\.\d\d\d/g, "");
@@ -555,6 +772,15 @@
       document.getElementById('adminDetalhesActions').classList.toggle('hidden', !usuarioLogado);
       abrirModal('modalDetalhes');
     }
+
+    // Alternar Presença no Admin
+    window.alternarPresenca = async (index) => {
+      const props = eventoSelecionado.extendedProps;
+      let inscritos = props.inscritos || [];
+      inscritos[index].presente = !inscritos[index].presente;
+      await updateDoc(doc(db, "eventos", eventoSelecionado.id), { inscritos });
+      fecharModal('modalDetalhes');
+    };
 
     window.abrirModal = (id) => document.getElementById(id).classList.replace('hidden', 'flex');
     window.fecharModal = (id) => document.getElementById(id).classList.replace('flex', 'hidden');
