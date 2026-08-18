@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calendário de Eventos ATI com Dashboards</title>
+  <title>Calendário de Eventos ATI com Dashboards e Convites</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -27,33 +27,32 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
 
-  <!-- Header NAVEGAÇÃO COM FUNDO AZUL INSTITUCIONAL E LOGO AMPLIADA -->
+  <!-- Header NAVEGAÇÃO COM FUNDO AZUL INSTITUCIONAL E LOGO -->
   <header class="bg-blue-900 border-b border-blue-800 sticky top-0 z-30 shadow-md">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+    <div class="max-w-7xl mx-auto px-4 py-5 flex flex-wrap items-center justify-between gap-6">
       
-      <!-- Marca / Logotipo do Governo + ATI (Tamanho Ampliado e Harmonioso) -->
-      <div class="flex items-center min-h-[60px]">
-        <!-- Substitua 'logo-ati.png' pelo caminho do arquivo no seu repositório -->
+      <!-- Marca / Logotipo do Governo + ATI -->
+      <div class="flex items-center">
         <img 
           src="logo-ati.png" 
           alt="Governo de Pernambuco - ATI" 
-          class="h-16 md:h-20 max-h-24 w-auto object-contain transition-all" 
+          class="h-24 md:h-28 max-h-32 w-auto object-contain transition-all py-1" 
           onerror="this.style.display='none'; document.getElementById('logoFallback').classList.remove('hidden');"
         >
         
         <!-- Fallback em texto caso a imagem não seja carregada -->
         <div id="logoFallback" class="hidden flex items-center gap-3">
-          <div class="bg-blue-800 text-white p-2.5 rounded-xl">
-            <i data-lucide="building-2" class="w-7 h-7"></i>
+          <div class="bg-blue-800 text-white p-3 rounded-xl">
+            <i data-lucide="building-2" class="w-8 h-8"></i>
           </div>
           <div>
-            <h1 class="text-lg font-bold text-white leading-tight">GOVERNO DE PERNAMBUCO</h1>
+            <h1 class="text-xl font-bold text-white leading-tight">GOVERNO DE PERNAMBUCO</h1>
             <p class="text-xs text-blue-200 font-medium">ATI - Agência Estadual de Tecnologia da Informação</p>
           </div>
         </div>
       </div>
 
-      <!-- Navegação em Abas (Calendário vs Dashboard) -->
+      <!-- Navegação em Abas -->
       <nav class="flex items-center gap-1 bg-blue-950/60 p-1.5 rounded-xl border border-blue-800/80">
         <button id="navCalendar" onclick="mudarAba('calendario')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition bg-blue-600 shadow-xs text-white">
           <i data-lucide="calendar" class="w-4 h-4"></i> Calendário
@@ -138,8 +137,6 @@
 
   <!-- MÓDULO 2: PAINEL DE DASHBOARDS E INDICADORES -->
   <main id="secDashboard" class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full hidden space-y-6">
-    
-    <!-- Barra Superior do Dashboard -->
     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
       <div>
         <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
@@ -277,6 +274,16 @@
           </div>
         </div>
 
+        <!-- NOVO CAMPO: Anexo de Imagem do Convite -->
+        <div class="flex items-start gap-3">
+          <i data-lucide="image" class="w-5 h-5 text-slate-400 mt-2"></i>
+          <div class="w-full">
+            <label class="block text-xs font-medium text-slate-500 mb-1">URL da Imagem do Convite / Card Promocional</label>
+            <input type="url" id="linkConviteImg" placeholder="https://exemplo.com/arte-convite.png" class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            <p class="text-[10px] text-slate-400 mt-1">Insira o link da imagem (PNG ou JPG) que será exibida ao clicar no evento.</p>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pl-8">
           <div>
             <label class="block text-xs font-medium text-slate-500 mb-1">Limite de Vagas (0 = ilimitado)</label>
@@ -357,9 +364,18 @@
     </div>
   </div>
 
-  <!-- Modal: Detalhes do Evento & Inscrição -->
+  <!-- Modal: Detalhes do Evento com Exibição da Imagem do Convite -->
   <div id="modalDetalhes" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 relative border border-slate-100 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6 relative border border-slate-100 max-h-[90vh] overflow-y-auto">
+      
+      <!-- EXIBIÇÃO DA ARTE/CONVITE DO EVENTO -->
+      <div id="boxConviteImg" class="hidden mb-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-900 relative group">
+        <img id="detalheConviteImg" src="" alt="Convite do Evento" class="w-full h-auto max-h-72 object-contain mx-auto">
+        <a id="btnBaixarConvite" target="_blank" class="absolute bottom-2 right-2 bg-slate-900/80 hover:bg-slate-900 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 backdrop-blur-xs transition">
+          <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Ver em Alta Resolução
+        </a>
+      </div>
+
       <div class="flex justify-between items-start mb-3">
         <span id="detalheCategoria" class="inline-block px-3 py-1 text-[11px] font-bold text-white rounded-full"></span>
         <button onclick="fecharModal('modalDetalhes')" class="text-slate-400 hover:text-slate-600">
@@ -758,6 +774,7 @@
         atualizarDashboard();
       });
 
+      // Gravar Evento no Firestore com o link do convite
       document.getElementById('formEvento').addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!usuarioLogado) return alert('É necessário realizar login para gravar eventos.');
@@ -771,6 +788,7 @@
           categoria: categoria,
           start: document.getElementById('dataInicio').value,
           end: document.getElementById('dataFim').value,
+          linkConviteImg: document.getElementById('linkConviteImg').value || '',
           limiteVagas: parseInt(document.getElementById('limiteVagas').value) || 0,
           linkMeet: document.getElementById('linkMeet').value || '',
           convidados: document.getElementById('convidados').value || '',
@@ -865,6 +883,7 @@
         document.getElementById('titulo').value = props.title;
         document.getElementById('dataInicio').value = props.start;
         document.getElementById('dataFim').value = props.end;
+        document.getElementById('linkConviteImg').value = props.linkConviteImg || '';
         document.getElementById('limiteVagas').value = props.limiteVagas || 0;
         document.getElementById('linkMeet').value = props.linkMeet || '';
         document.getElementById('convidados').value = props.convidados || '';
@@ -881,10 +900,24 @@
       });
     }
 
+    // Exibir Modal com o Convite Visual
     function abrirModalDetalhes(fcEvent) {
       eventoSelecionado = fcEvent;
       const props = fcEvent.extendedProps;
       const inscritos = props.inscritos || [];
+
+      // Renderizar imagem do convite caso exista
+      const boxConvite = document.getElementById('boxConviteImg');
+      const imgConvite = document.getElementById('detalheConviteImg');
+      const btnConvite = document.getElementById('btnBaixarConvite');
+
+      if (props.linkConviteImg && props.linkConviteImg.trim() !== '') {
+        imgConvite.src = props.linkConviteImg;
+        btnConvite.href = props.linkConviteImg;
+        boxConvite.classList.remove('hidden');
+      } else {
+        boxConvite.classList.add('hidden');
+      }
 
       document.getElementById('detalheTitulo').textContent = props.title;
       document.getElementById('detalheCategoria').textContent = props.categoria;
