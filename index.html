@@ -29,11 +29,11 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
 
-  <!-- Header NAVEGAÇÃO COM FUNDO AZUL INSTITUCIONAL E LOGO EXPANDIDA/MAXIMIZADA -->
+  <!-- Header NAVEGAÇÃO COM FUNDO AZUL INSTITUCIONAL E LOGO EXPANDIDA -->
   <header class="bg-blue-900 border-b border-blue-800 sticky top-0 z-30 shadow-md">
     <div class="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center justify-between gap-6">
       
-      <!-- Marca / Logotipo do Governo + ATI (Tamanho Maximizado em Destaque) -->
+      <!-- Marca / Logotipo do Governo + ATI -->
       <div class="flex items-center min-h-[100px]">
         <img 
           src="logo-ati.png" 
@@ -244,33 +244,36 @@
     </div>
   </main>
 
-  <!-- Modal: Criar / Editar Evento -->
-  <div id="modalEvento" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center z-50 p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl my-6 overflow-hidden border border-slate-100">
+  <!-- Modal: Criar / Editar Evento (Corrigido para Mobile) -->
+  <div id="modalEvento" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-start justify-center z-50 p-3 md:p-6 pt-16 md:pt-8">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden border border-slate-100">
       
-      <div class="bg-slate-50 px-6 py-3 border-b border-slate-100 flex justify-between items-center">
-        <span id="modalEventoHeader" class="text-xs font-semibold uppercase tracking-wider text-slate-500">Agendar Evento</span>
-        <button onclick="fecharModal('modalEvento')" class="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200/50">
+      <!-- Topo Fixo do Modal -->
+      <div class="bg-slate-50 px-5 py-3.5 border-b border-slate-100 flex justify-between items-center shrink-0">
+        <span id="modalEventoHeader" class="text-xs font-bold uppercase tracking-wider text-slate-600">Agendar Evento</span>
+        <button onclick="fecharModal('modalEvento')" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-200/60 transition">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <form id="formEvento" class="p-6 space-y-4">
+      <!-- Formulário com Rolagem Interna -->
+      <form id="formEvento" class="p-5 md:p-6 space-y-4 overflow-y-auto flex-1">
         <input type="hidden" id="eventoId">
 
         <div>
-          <input type="text" id="titulo" required placeholder="Adicionar título do evento" class="w-full text-2xl font-semibold border-b-2 border-slate-200 pb-1.5 outline-none focus:border-blue-600 transition placeholder-slate-400">
+          <label class="block text-xs font-medium text-slate-500 mb-1">Título do Evento *</label>
+          <input type="text" id="titulo" required placeholder="Digite o nome do evento" class="w-full text-xl font-semibold border-b-2 border-slate-200 pb-1.5 outline-none focus:border-blue-600 transition placeholder-slate-400">
         </div>
 
         <div class="flex items-start gap-3">
-          <i data-lucide="clock" class="w-5 h-5 text-slate-400 mt-2"></i>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+          <i data-lucide="clock" class="w-5 h-5 text-slate-400 mt-2 shrink-0"></i>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
             <div>
-              <label class="block text-xs font-medium text-slate-500 mb-1">Início</label>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Início *</label>
               <input type="datetime-local" id="dataInicio" required class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
-              <label class="block text-xs font-medium text-slate-500 mb-1">Término</label>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Término *</label>
               <input type="datetime-local" id="dataFim" required class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
             </div>
           </div>
@@ -278,15 +281,15 @@
 
         <!-- CAMPO: Anexo de Imagem do Convite -->
         <div class="flex items-start gap-3">
-          <i data-lucide="image" class="w-5 h-5 text-slate-400 mt-2"></i>
+          <i data-lucide="image" class="w-5 h-5 text-slate-400 mt-2 shrink-0"></i>
           <div class="w-full">
             <label class="block text-xs font-medium text-slate-500 mb-1">URL da Imagem do Convite / Card Promocional</label>
             <input type="url" id="linkConviteImg" placeholder="https://exemplo.com/arte-convite.png" class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
-            <p class="text-[10px] text-slate-400 mt-1">Insira o link da imagem (PNG ou JPG) que será exibida ao clicar no evento.</p>
+            <p class="text-[10px] text-slate-400 mt-1">Link da imagem (PNG ou JPG) que será exibida ao clicar no evento.</p>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pl-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-0 sm:pl-8">
           <div>
             <label class="block text-xs font-medium text-slate-500 mb-1">Limite de Vagas (0 = ilimitado)</label>
             <input type="number" id="limiteVagas" min="0" value="0" class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
@@ -298,16 +301,16 @@
         </div>
 
         <div class="flex items-start gap-3">
-          <i data-lucide="mail" class="w-5 h-5 text-slate-400 mt-2"></i>
+          <i data-lucide="mail" class="w-5 h-5 text-slate-400 mt-2 shrink-0"></i>
           <div class="w-full">
             <label class="block text-xs font-medium text-slate-500 mb-1">Convidados Diretos (E-mails separados por vírgula)</label>
-            <input type="text" id="convidados" placeholder="e.g. maria@ati.pe.gov.br, joao@gmail.com" class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="text" id="convidados" placeholder="maria@ati.pe.gov.br, joao@gmail.com" class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
           </div>
         </div>
 
         <div class="flex items-center gap-3">
-          <i data-lucide="tag" class="w-5 h-5 text-slate-400"></i>
-          <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-3">
+          <i data-lucide="tag" class="w-5 h-5 text-slate-400 shrink-0"></i>
+          <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
             <select id="categoriaSelect" required class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white outline-none focus:ring-2 focus:ring-blue-500">
               <option value="Segurança da Informação">Segurança da Informação</option>
               <option value="Inteligência Artificial">Inteligência Artificial</option>
@@ -325,19 +328,19 @@
         </div>
 
         <div class="flex items-center gap-3">
-          <i data-lucide="map-pin" class="w-5 h-5 text-slate-400"></i>
+          <i data-lucide="map-pin" class="w-5 h-5 text-slate-400 shrink-0"></i>
           <input type="text" id="local" required placeholder="Local presencial ou link da reunião" class="w-full p-2 border-b border-slate-200 text-xs outline-none focus:border-blue-600">
         </div>
 
         <div class="flex items-start gap-3">
-          <i data-lucide="users" class="w-5 h-5 text-slate-400 mt-2"></i>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+          <i data-lucide="users" class="w-5 h-5 text-slate-400 mt-2 shrink-0"></i>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
             <input type="text" id="realizador" required placeholder="Quem realiza (Ex: GRGD/ATI)" class="w-full p-2 border-b border-slate-200 text-xs outline-none focus:border-blue-600">
             <input type="text" id="palestrantes" placeholder="Palestrante(s) / Apresentador" class="w-full p-2 border-b border-slate-200 text-xs outline-none focus:border-blue-600">
           </div>
         </div>
 
-        <div class="flex items-center gap-3 pl-8">
+        <div class="flex items-center gap-3 pl-0 sm:pl-8">
           <label class="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-700">
             <input type="checkbox" id="temCertificado" class="w-4 h-4 text-blue-600 rounded">
             Gera Certificado
@@ -349,16 +352,17 @@
         </div>
 
         <div class="flex items-start gap-3">
-          <i data-lucide="file-text" class="w-5 h-5 text-slate-400 mt-2"></i>
+          <i data-lucide="file-text" class="w-5 h-5 text-slate-400 mt-2 shrink-0"></i>
           <input type="url" id="linkMaterial" placeholder="Link dos Slides/Material de Apoio (Drive, PDF...)" class="w-full p-2 border-b border-slate-200 text-xs outline-none focus:border-blue-600">
         </div>
 
         <div class="flex items-start gap-3">
-          <i data-lucide="align-left" class="w-5 h-5 text-slate-400 mt-2"></i>
+          <i data-lucide="align-left" class="w-5 h-5 text-slate-400 mt-2 shrink-0"></i>
           <textarea id="descricao" rows="2" placeholder="Pauta ou informações adicionais..." class="w-full p-2 border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500"></textarea>
         </div>
 
-        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+        <!-- Rodapé do Formulário -->
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 shrink-0">
           <button type="button" onclick="fecharModal('modalEvento')" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
           <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs">Salvar Evento & Notificar</button>
         </div>
@@ -367,8 +371,8 @@
   </div>
 
   <!-- Modal: Detalhes do Evento com Exibição da Imagem do Convite -->
-  <div id="modalDetalhes" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6 relative border border-slate-100 max-h-[90vh] overflow-y-auto">
+  <div id="modalDetalhes" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-start justify-center z-50 p-3 md:p-6 pt-16 md:pt-8">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6 relative border border-slate-100 max-h-[85vh] overflow-y-auto">
       
       <!-- EXIBIÇÃO DA ARTE/CONVITE DO EVENTO -->
       <div id="boxConviteImg" class="hidden mb-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-900 relative group">
