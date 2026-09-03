@@ -1,4 +1,8 @@
-# Calendário de Eventos ATI — V2
+# Calendário de Eventos ATI — V2.1.0
+
+> **Versão atual: 2.1.0** — controle de versão registrado em `VERSION` e `CHANGELOG.md`.
+>
+> A versão 2.1.0 corrige a navegação das abas da área administrativa e impede que os painéis fiquem sobrepostos.
 
 Versão revisada da aplicação original, com:
 
@@ -229,3 +233,21 @@ Antes do primeiro deploy em produção, teste no Emulator Suite e valide as Rule
 - admin gerencia usuários: permitido;
 - usuário `@gmail.com` tenta administração: negado;
 - usuário `@ati.pe.gov.br` não cadastrado: negado.
+
+
+## 13. Controle de versão
+
+Para qualquer alteração de código:
+
+1. incremente a versão seguindo o padrão `MAJOR.MINOR.PATCH`;
+2. atualize o arquivo `VERSION`;
+3. atualize a meta `app-version` no `index.html`;
+4. atualize o selo de versão no painel administrativo;
+5. registre a alteração em `CHANGELOG.md`;
+6. gere um novo pacote ZIP com todos os arquivos da aplicação.
+
+### Versão atual
+
+```text
+2.1.0
+```
