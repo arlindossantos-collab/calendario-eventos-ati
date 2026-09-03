@@ -24,6 +24,20 @@
     .modal-backdrop { background: rgba(15, 23, 42, .68); backdrop-filter: blur(4px); }
     .dropzone.dragover { border-color:#2563eb; background:#eff6ff; }
     .hidden-important { display:none !important; }
+    /* Navegação do painel administrativo: área clicável estável em desktop e mobile */
+    .admin-tabs-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
+    .admin-tabs { display:flex; flex-wrap:nowrap; gap:.5rem; min-width:max-content; padding:.25rem; }
+    .admin-tab { position:relative; display:inline-flex; align-items:center; justify-content:center; gap:.5rem; min-height:44px; padding:.7rem 1rem; border:1px solid #e2e8f0; border-radius:.8rem; background:#fff; color:#475569; font-size:.75rem; font-weight:800; line-height:1; white-space:nowrap; cursor:pointer; transition:all .15s ease; user-select:none; }
+    .admin-tab:hover { background:#f8fafc; color:#0f172a; border-color:#cbd5e1; }
+    .admin-tab.active { background:#172554; color:#fff; border-color:#172554; box-shadow:0 4px 10px rgba(15,23,42,.12); }
+    .admin-tab:focus-visible { outline:3px solid rgba(37,99,235,.25); outline-offset:2px; }
+    .admin-tab svg { width:16px; height:16px; flex:0 0 auto; }
+    .admin-tab-panel { display:block; min-width:0; }
+    .admin-tab-panel.hidden { display:none !important; }
+    @media (max-width:640px) {
+      .admin-tabs { width:max-content; }
+      .admin-tab { min-height:46px; padding:.75rem .9rem; }
+    }
   </style>
 </head>
 
@@ -150,53 +164,93 @@
       </button>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-      <div class="bg-white rounded-2xl border p-4"><span id="admTotalEventos" class="block text-2xl font-black">0</span><span class="text-[10px] text-slate-500">Eventos</span></div>
-      <div class="bg-white rounded-2xl border p-4"><span id="admFuturos" class="block text-2xl font-black text-blue-600">0</span><span class="text-[10px] text-slate-500">Futuros</span></div>
-      <div class="bg-white rounded-2xl border p-4"><span id="admRealizados" class="block text-2xl font-black text-emerald-600">0</span><span class="text-[10px] text-slate-500">Realizados</span></div>
-      <div class="bg-white rounded-2xl border p-4"><span id="admInscricoes" class="block text-2xl font-black text-violet-600">0</span><span class="text-[10px] text-slate-500">Inscrições</span></div>
-      <div class="bg-white rounded-2xl border p-4"><span id="admCertificados" class="block text-2xl font-black text-amber-600">0</span><span class="text-[10px] text-slate-500">Presenças</span></div>
+    <div class="admin-tabs-wrap bg-slate-100/90 border border-slate-200 rounded-2xl p-1.5 shadow-sm" aria-label="Navegação administrativa">
+      <nav id="adminTabs" class="admin-tabs" role="tablist" aria-label="Seções do painel">
+        <button type="button" class="admin-tab active" data-admin-tab="dashboard" role="tab" aria-selected="true" aria-controls="adminTabDashboard">
+          <i data-lucide="layout-dashboard"></i><span>Visão geral</span>
+        </button>
+        <button type="button" class="admin-tab" data-admin-tab="eventos" role="tab" aria-selected="false" aria-controls="adminTabEventos">
+          <i data-lucide="calendar-days"></i><span>Eventos</span>
+        </button>
+        <button type="button" class="admin-tab" data-admin-tab="inscricoes" role="tab" aria-selected="false" aria-controls="adminTabInscricoes">
+          <i data-lucide="users"></i><span>Inscrições</span>
+        </button>
+        <button type="button" id="adminTabUsuariosBtn" class="admin-tab hidden" data-admin-tab="usuarios" role="tab" aria-selected="false" aria-controls="adminTabUsuarios">
+          <i data-lucide="shield-user"></i><span>Usuários</span>
+        </button>
+      </nav>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-      <div class="lg:col-span-2 bg-white rounded-2xl border shadow-sm p-5">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-slate-900">Eventos</h3>
-          <input id="adminBuscaEvento" type="search" placeholder="Pesquisar..." class="px-3 py-2 border rounded-xl text-xs">
+    <section id="adminTabDashboard" class="admin-tab-panel space-y-5" role="tabpanel">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div class="bg-white rounded-2xl border p-4"><span id="admTotalEventos" class="block text-2xl font-black">0</span><span class="text-[10px] text-slate-500">Eventos</span></div>
+        <div class="bg-white rounded-2xl border p-4"><span id="admFuturos" class="block text-2xl font-black text-blue-600">0</span><span class="text-[10px] text-slate-500">Futuros</span></div>
+        <div class="bg-white rounded-2xl border p-4"><span id="admRealizados" class="block text-2xl font-black text-emerald-600">0</span><span class="text-[10px] text-slate-500">Realizados</span></div>
+        <div class="bg-white rounded-2xl border p-4"><span id="admInscricoes" class="block text-2xl font-black text-violet-600">0</span><span class="text-[10px] text-slate-500">Inscrições</span></div>
+        <div class="bg-white rounded-2xl border p-4"><span id="admCertificados" class="block text-2xl font-black text-amber-600">0</span><span class="text-[10px] text-slate-500">Presenças</span></div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2 bg-white rounded-2xl border shadow-sm p-5">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div><h3 class="font-bold text-slate-900">Resumo dos eventos</h3><p class="text-[11px] text-slate-500">Use a aba Eventos para editar ou excluir.</p></div>
+            <button type="button" data-admin-goto="eventos" class="text-xs font-bold text-blue-600 hover:text-blue-800">Ver eventos →</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-y"><tr><th class="p-3">Evento</th><th class="p-3">Data</th><th class="p-3">Status</th><th class="p-3">Inscritos</th></tr></thead>
+              <tbody id="adminResumoEventosBody" class="divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border shadow-sm p-5">
+          <h3 class="font-bold text-slate-900 mb-4">Distribuição por categoria</h3>
+          <div class="h-64"><canvas id="adminChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="adminTabEventos" class="admin-tab-panel hidden space-y-5" role="tabpanel" aria-hidden="true">
+      <div class="bg-white rounded-2xl border shadow-sm p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div><h3 class="font-bold text-slate-900">Eventos cadastrados</h3><p class="text-xs text-slate-500">Crie, edite, publique e acompanhe os eventos.</p></div>
+          <input id="adminBuscaEvento" type="search" placeholder="Pesquisar evento..." class="px-3 py-2.5 border border-slate-200 rounded-xl text-xs w-full sm:w-56">
         </div>
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50 border-y">
-              <tr>
-                <th class="p-3">Evento</th><th class="p-3">Data</th><th class="p-3">Status</th><th class="p-3">Inscritos</th><th class="p-3 text-right">Ações</th>
-              </tr>
-            </thead>
+          <table class="w-full text-left text-xs min-w-[760px]">
+            <thead class="bg-slate-50 border-y"><tr><th class="p-3">Evento</th><th class="p-3">Data</th><th class="p-3">Status</th><th class="p-3">Inscritos</th><th class="p-3 text-right">Ações</th></tr></thead>
             <tbody id="adminEventosBody" class="divide-y"></tbody>
           </table>
         </div>
       </div>
+    </section>
 
+    <section id="adminTabInscricoes" class="admin-tab-panel hidden space-y-5" role="tabpanel" aria-hidden="true">
       <div class="bg-white rounded-2xl border shadow-sm p-5">
-        <h3 class="font-bold text-slate-900 mb-4">Distribuição por categoria</h3>
-        <div class="h-64"><canvas id="adminChart"></canvas></div>
-      </div>
-    </div>
-
-    <section id="adminUsuariosSection" class="bg-white rounded-2xl border shadow-sm p-5 hidden">
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div>
-          <h3 class="font-bold text-slate-900">Usuários autorizados</h3>
-          <p class="text-xs text-slate-500">O cadastro libera o acesso administrativo; o usuário entra pelo link enviado ao e-mail institucional.</p>
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div><h3 class="font-bold text-slate-900">Inscrições</h3><p class="text-xs text-slate-500">Somente usuários administrativos autorizados conseguem visualizar estes dados.</p></div>
+          <input id="adminBuscaInscricao" type="search" placeholder="Nome, e-mail ou evento..." class="px-3 py-2.5 border border-slate-200 rounded-xl text-xs w-full sm:w-64">
         </div>
-        <button id="btnNovoUsuario" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2">
-          <i data-lucide="user-plus" class="w-4 h-4"></i> Autorizar e-mail
-        </button>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs min-w-[820px]">
+            <thead class="bg-slate-50 border-y"><tr><th class="p-3">Participante</th><th class="p-3">E-mail</th><th class="p-3">Evento</th><th class="p-3">Data</th><th class="p-3">Presença</th><th class="p-3 text-right">Ação</th></tr></thead>
+            <tbody id="adminInscricoesBody" class="divide-y"></tbody>
+          </table>
+        </div>
       </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50 border-y"><tr><th class="p-3">Nome</th><th class="p-3">E-mail</th><th class="p-3">Perfil</th><th class="p-3">Status</th><th class="p-3 text-right">Ações</th></tr></thead>
-          <tbody id="adminUsuariosBody" class="divide-y"></tbody>
-        </table>
+    </section>
+
+    <section id="adminTabUsuarios" class="admin-tab-panel hidden space-y-5" role="tabpanel" aria-hidden="true">
+      <div class="bg-white rounded-2xl border shadow-sm p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div><h3 class="font-bold text-slate-900">Usuários autorizados</h3><p class="text-xs text-slate-500">O cadastro libera o acesso administrativo; o usuário entra pelo link enviado ao e-mail institucional.</p></div>
+          <button id="btnNovoUsuario" type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4"></i> Autorizar e-mail</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs min-w-[700px]">
+            <thead class="bg-slate-50 border-y"><tr><th class="p-3">Nome</th><th class="p-3">E-mail</th><th class="p-3">Perfil</th><th class="p-3">Status</th><th class="p-3 text-right">Ações</th></tr></thead>
+            <tbody id="adminUsuariosBody" class="divide-y"></tbody>
+          </table>
+        </div>
       </div>
     </section>
   </div>
@@ -403,6 +457,7 @@ const COLORS = {
 let calendar = null;
 let allPublicEvents = [];
 let allAdminEvents = [];
+let allAdminRegistrations = [];
 let selectedPublicEvent = null;
 let currentAdmin = null;
 let currentAdminRole = null;
@@ -686,9 +741,11 @@ onAuthStateChanged(auth, async user => {
     hide("adminLoginView"); show("adminPanelView");
     hide("publicHeaderActions"); show("adminHeaderActions","flex");
     $("adminIdentity").textContent = `${profile.nome} • ${profile.role === "admin" ? "Administrador" : "Editor"}`;
-    if (profile.role === "admin") { show("adminUsuariosSection"); loadAdminUsers(); }
-    else hide("adminUsuariosSection");
+    if (profile.role === "admin") { show("adminTabUsuariosBtn"); loadAdminUsers(); }
+    else hide("adminTabUsuariosBtn");
     loadAdminEvents();
+    loadAdminRegistrations();
+    setAdminTab("dashboard");
   } catch (err) {
     console.error(err);
     await signOut(auth);
@@ -696,6 +753,80 @@ onAuthStateChanged(auth, async user => {
 });
 
 $("btnLogout").addEventListener("click", () => signOut(auth));
+
+function setAdminTab(name) {
+  const allowed = ["dashboard", "eventos", "inscricoes", "usuarios"];
+  if (!allowed.includes(name)) name = "dashboard";
+  if (name === "usuarios" && !canManageUsers()) name = "dashboard";
+  document.querySelectorAll("[data-admin-tab]").forEach(btn => {
+    const active = btn.dataset.adminTab === name && !btn.classList.contains("hidden");
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  document.querySelectorAll(".admin-tab-panel").forEach(panel => {
+    const active = panel.id === `adminTab${name.charAt(0).toUpperCase()+name.slice(1)}`;
+    panel.classList.toggle("hidden", !active);
+    panel.setAttribute("aria-hidden", active ? "false" : "true");
+  });
+  if (name === "dashboard") { renderAdminMetrics(); renderAdminChart(); renderAdminSummary(); }
+  if (name === "eventos") renderAdminEvents();
+  if (name === "inscricoes") renderAdminRegistrations();
+  if (name === "usuarios") loadAdminUsers();
+  lucide.createIcons();
+}
+
+document.addEventListener("click", e => {
+  const tab = e.target.closest("[data-admin-tab]");
+  if (tab) { e.preventDefault(); setAdminTab(tab.dataset.adminTab); return; }
+  const goto = e.target.closest("[data-admin-goto]");
+  if (goto) { e.preventDefault(); setAdminTab(goto.dataset.adminGoto); }
+});
+
+function renderAdminSummary() {
+  const events = [...allAdminEvents].sort((a,b)=>new Date(a.start)-new Date(b.start)).slice(0,6);
+  $("adminResumoEventosBody").innerHTML = events.length ? events.map(ev => {
+    const status = ev.status === "cancelado" ? ["Cancelado","bg-red-100 text-red-700"] : new Date(ev.end) < new Date() ? ["Realizado","bg-emerald-100 text-emerald-700"] : ev.publicado ? ["Publicado","bg-blue-100 text-blue-700"] : ["Rascunho","bg-slate-100 text-slate-600"];
+    return `<tr class="hover:bg-slate-50"><td class="p-3"><strong class="block text-slate-800">${escapeHtml(ev.title)}</strong><span class="text-[10px] text-slate-400">${escapeHtml(ev.categoria||"")}</span></td><td class="p-3 whitespace-nowrap">${fmtDate(ev.start)}</td><td class="p-3"><span class="px-2 py-1 rounded-full text-[10px] font-bold ${status[1]}">${status[0]}</span></td><td class="p-3 font-bold">${ev.totalInscritos||0}</td></tr>`;
+  }).join("") : `<tr><td colspan="4" class="p-8 text-center text-slate-400">Nenhum evento cadastrado.</td></tr>`;
+}
+
+async function loadAdminRegistrations() {
+  try {
+    const snap = await getDocs(collection(db,"inscricoes"));
+    allAdminRegistrations = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderAdminRegistrations();
+    renderAdminMetrics();
+  } catch (err) { console.error(err); toast("Erro ao carregar inscrições administrativas.", "error"); }
+}
+function renderAdminRegistrations() {
+  const term = ($("adminBuscaInscricao")?.value || "").trim().toLowerCase();
+  const byId = Object.fromEntries(allAdminEvents.map(ev=>[ev.id,ev]));
+  const rows = allAdminRegistrations.filter(r => {
+    const ev=byId[r.eventId];
+    return !term || [r.nome,r.email,ev?.title].join(" ").toLowerCase().includes(term);
+  }).sort((a,b)=>String(b.criadoEm?.seconds||0).localeCompare(String(a.criadoEm?.seconds||0)));
+  $("adminInscricoesBody").innerHTML = rows.length ? rows.map(r=>{
+    const ev=byId[r.eventId];
+    const presente=!!r.presente;
+    return `<tr class="hover:bg-slate-50"><td class="p-3 font-semibold">${escapeHtml(r.nome||"")}</td><td class="p-3">${escapeHtml(r.email||"")}</td><td class="p-3">${escapeHtml(ev?.title||r.eventId||"")}</td><td class="p-3 whitespace-nowrap">${r.criadoEm?.seconds ? fmtDate(new Date(r.criadoEm.seconds*1000).toISOString()) : "—"}</td><td class="p-3"><span class="px-2 py-1 rounded-full text-[10px] font-bold ${presente?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-600"}">${presente?"Presente":"Não registrada"}</span></td><td class="p-3 text-right"><button type="button" data-registration-presence="${escapeHtml(r.id)}" data-presente="${presente?"false":"true"}" class="px-3 py-1.5 rounded-lg ${presente?"bg-slate-100":"bg-emerald-50 text-emerald-700"} font-bold">${presente?"Desmarcar":"Marcar presença"}</button></td></tr>`;
+  }).join("") : `<tr><td colspan="6" class="p-8 text-center text-slate-400">Nenhuma inscrição encontrada.</td></tr>`;
+}
+
+$("adminBuscaInscricao")?.addEventListener("input", renderAdminRegistrations);
+
+document.addEventListener("click", async e => {
+  const btn=e.target.closest("[data-registration-presence]");
+  if (!btn) return;
+  try {
+    const value=btn.dataset.presente === "true";
+    await updateDoc(doc(db,"inscricoes",btn.dataset.registrationPresence),{presente:value, atualizadoEm:serverTimestamp()});
+    const row=allAdminRegistrations.find(x=>x.id===btn.dataset.registrationPresence);
+    if (row) row.presente=value;
+    await refreshRegistrationCounts();
+    renderAdminRegistrations(); renderAdminMetrics(); renderAdminSummary();
+    toast(value ? "Presença registrada." : "Presença removida.", "success");
+  } catch(err) { console.error(err); toast("Não foi possível atualizar a presença.", "error"); }
+});
 
 function canManageUsers() { return currentAdminRole === "admin"; }
 function canEditEvents() { return currentAdminRole === "admin" || currentAdminRole === "editor"; }
@@ -708,14 +839,19 @@ function loadAdminEvents() {
     renderAdminEvents();
     renderAdminMetrics();
     renderAdminChart();
+    renderAdminSummary();
   }, err => { console.error(err); toast("Erro ao carregar eventos administrativos.", "error"); });
 }
 async function refreshRegistrationCounts() {
-  const snaps = await getDocs(collection(db,"inscricoes"));
+  if (!allAdminRegistrations.length) {
+    try {
+      const snaps = await getDocs(collection(db,"inscricoes"));
+      allAdminRegistrations = snaps.docs.map(d=>({id:d.id,...d.data()}));
+    } catch (err) { console.error(err); }
+  }
   const counts = {};
   const present = {};
-  snaps.forEach(s => {
-    const r=s.data();
+  allAdminRegistrations.forEach(r => {
     counts[r.eventId]=(counts[r.eventId]||0)+1;
     if (r.presente) present[r.eventId]=(present[r.eventId]||0)+1;
   });
@@ -957,6 +1093,7 @@ window.addEventListener("popstate", () => {
 
 setupCategories();
 lucide.createIcons();
+setAdminTab("dashboard");
 if (isAdminRoute()) {
   hide("publicApp"); show("adminApp","block");
   completeEmailLinkIfNeeded();
