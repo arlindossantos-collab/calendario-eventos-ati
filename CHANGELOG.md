@@ -1,5 +1,12 @@
 # Controle de versão — Calendário de Eventos ATI
 
+## 2.1.1 — 03/09/2026
+### Correções
+- Corrigido o achatamento horizontal da área administrativa causado pelo helper `show()` aplicar `display:flex` por padrão ao `#adminPanelView`.
+- O `#adminPanelView` agora é explicitamente exibido como `display:block`, mantendo o cabeçalho, navegação e painéis em fluxo vertical normal.
+- As abas administrativas voltam a ocupar toda a largura disponível e ficam plenamente clicáveis.
+- Mantida a alternância de painéis por clique, teclado e hash da URL implementada na versão 2.1.0.
+
 ## 2.1.0 — 03/09/2026
 ### Correções
 - Corrigida a navegação das abas da área administrativa.
@@ -11,7 +18,7 @@
 - A aba **Usuários** continua restrita ao perfil administrador.
 
 ### Controle de versão
-- Versão atual: **2.1.0**
+- Versão atual: **2.1.1**
 - Toda alteração futura no código deve incrementar a versão e registrar a mudança neste arquivo.
 - O arquivo `VERSION` contém exclusivamente a versão atual.
 - A versão também é registrada na meta `app-version` e exibida no painel administrativo.

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Calendário de Eventos da Agência Estadual de Tecnologia da Informação - ATI Pernambuco">
-  <meta name="app-version" content="2.1.0">
+  <meta name="app-version" content="2.1.1">
   <title>Calendário de Eventos ATI Pernambuco</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -161,7 +161,7 @@
         <span class="text-[10px] uppercase tracking-wider font-bold text-blue-600">Gestão</span>
         <h2 class="text-2xl font-black text-slate-900">Painel administrativo</h2>
         <p class="text-xs text-slate-500">Eventos, inscrições, presença e usuários autorizados.</p>
-        <span id="appVersionBadge" class="inline-flex mt-2 items-center rounded-full bg-slate-100 border border-slate-200 px-2 py-1 text-[10px] font-bold text-slate-500">Versão 2.1.0</span>
+        <span id="appVersionBadge" class="inline-flex mt-2 items-center rounded-full bg-slate-100 border border-slate-200 px-2 py-1 text-[10px] font-bold text-slate-500">Versão 2.1.1</span>
       </div>
       <button id="btnNovoEvento" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-4 py-3 rounded-xl text-xs flex items-center gap-2 shadow-sm">
         <i data-lucide="plus-circle" class="w-4 h-4"></i> Novo evento
@@ -742,7 +742,7 @@ onAuthStateChanged(auth, async user => {
     if (!profile) return;
     currentAdmin = profile.email;
     currentAdminRole = profile.role;
-    hide("adminLoginView"); show("adminPanelView");
+    hide("adminLoginView"); show("adminPanelView","block");
     hide("publicHeaderActions"); show("adminHeaderActions","flex");
     $("adminIdentity").textContent = `${profile.nome} • ${profile.role === "admin" ? "Administrador" : "Editor"}`;
     if (profile.role === "admin") { show("adminTabUsuariosBtn"); loadAdminUsers(); }
