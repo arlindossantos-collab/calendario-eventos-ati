@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Calendário de Eventos da Agência Estadual de Tecnologia da Informação - ATI Pernambuco">
+  <meta name="app-version" content="2.2.0">
+  <title>Calendário de Eventos ATI Pernambuco</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    .fc { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .fc-event { border: none !important; border-radius: 6px !important; padding: 2px 5px !important; cursor: pointer; }
+    .fc-event-title { font-weight: 600 !important; font-size: .85rem !important; }
+    .fc-toolbar-title { font-size: 1.25rem !important; font-weight: 800 !important; color: #0f172a; }
+    .fc-button-primary { background-color: #2563eb !important; border-color: #2563eb !important; border-radius: .5rem !important; font-weight: 600 !important; }
+    .fc-button-primary:hover { background-color: #1d4ed8 !important; border-color: #1d4ed8 !important; }
+    .fc-daygrid-event { white-space: normal !important; }
+    .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .modal-backdrop { background: rgba(15, 23, 42, .68); backdrop-filter: blur(4px); }
+    .dropzone.dragover { border-color:#2563eb; background:#eff6ff; }
+    .hidden-important { display:none !important; }
+    /* Estrutura administrativa: nunca usar flex no painel de conteúdo. */
+    #adminPanelView { display:block; width:100%; min-width:0; }
+    #adminPanelView.hidden { display:none !important; }
+    .admin-tabs-wrap { display:block; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
+    .admin-tabs { display:flex; flex-direction:row; flex-wrap:nowrap; align-items:stretch; gap:.5rem; width:max-content; min-width:100%; padding:.25rem; }
+    .admin-tab { position:relative; flex:0 0 auto; display:inline-flex !important; align-items:center; justify-content:center; gap:.5rem; min-height:44px; padding:.7rem 1rem; border:1px solid #e2e8f0; border-radius:.8rem; background:#fff; color:#475569; font-size:.75rem; font-weight:800; line-height:1; white-space:nowrap; cursor:pointer; transition:all .15s ease; user-select:none; }
+    .admin-tab:hover { background:#f8fafc; color:#0f172a; border-color:#cbd5e1; }
+    .admin-tab.active { background:#172554; color:#fff; border-color:#172554; box-shadow:0 4px 10px rgba(15,23,42,.12); }
+    .admin-tab:focus-visible { outline:3px solid rgba(37,99,235,.25); outline-offset:2px; }
+    .admin-tab svg { width:16px; height:16px; flex:0 0 auto; }
+    .admin-tab[hidden], .admin-tab.hidden { display:none !important; }
+    .admin-tab-panel { display:block !important; width:100%; min-width:0; }
+    .admin-tab-panel[hidden], .admin-tab-panel.hidden { display:none !important; }
+    .admin-tab-panel > * { min-width:0; }
+    .admin-tab[aria-disabled="true"] { opacity:.5; cursor:not-allowed; }
+    @media (max-width:640px) {
+      .admin-tabs { min-width:max-content; }
+      .admin-tab { min-height:46px; padding:.75rem .9rem; }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+<header class="bg-blue-950 border-b border-blue-900 sticky top-0 z-40 shadow-lg">
+  <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+    <a href="/" class="flex items-center gap-4 min-h-[72px]">
+      <img src="logo-ati.png" alt="Governo de Pernambuco - ATI" class="h-20 md:h-24 w-auto object-contain">
+      <div class="hidden sm:block border-l border-blue-800 pl-4">
+        <p class="text-[10px] uppercase tracking-[.2em] text-blue-300 font-bold">Calendário institucional</p>
+        <h1 class="text-lg md:text-xl font-extrabold text-white">Eventos ATI Pernambuco</h1>
+      </div>
+    </a>
+
+    <div id="publicHeaderActions" class="flex items-center gap-2">
+      <a href="/" class="px-3 py-2 rounded-xl text-xs font-semibold text-blue-100 hover:bg-blue-900">Calendário</a>
+      <a href="/admin" class="px-3 py-2 rounded-xl bg-white/10 border border-blue-800 text-white text-xs font-semibold hover:bg-white/15">
+        Área administrativa
+      </a>
+    </div>
+    <div id="adminHeaderActions" class="hidden items-center gap-2">
+      <a href="/" class="px-3 py-2 rounded-xl text-xs font-semibold text-blue-100 hover:bg-blue-900">Ver calendário público</a>
+      <span id="adminIdentity" class="hidden md:inline text-xs text-blue-100 font-medium border-l border-blue-800 pl-3"></span>
+      <button id="btnLogout" class="px-3 py-2 rounded-xl bg-red-500/10 border border-red-400/30 text-red-100 text-xs font-semibold hover:bg-red-500/20">Sair</button>
+    </div>
+  </div>
+</header>
+
+<main id="publicApp" class="max-w-7xl mx-auto px-4 py-6">
+  <section class="mb-5">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <span class="inline-flex items-center gap-2 text-[10px] uppercase tracking-wider font-bold text-blue-600 mb-1">
+            <i data-lucide="calendar-days" class="w-4 h-4"></i> Agenda institucional
+          </span>
+          <h2 class="text-2xl md:text-3xl font-black text-slate-900">Calendário de Eventos</h2>
+          <p class="text-sm text-slate-500 mt-1">Consulte eventos, capacitações, workshops e atividades da ATI.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button id="btnPublicHoje" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold">Hoje</button>
+          <button id="btnPublicCompartilhar" class="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+            <i data-lucide="share-2" class="w-4 h-4"></i> Compartilhar calendário
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid grid-cols-1 lg:grid-cols-4 gap-5">
+    <aside class="lg:col-span-1 space-y-4">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="text-xs uppercase tracking-wider font-bold text-slate-700 flex items-center gap-2 mb-4">
+          <i data-lucide="filter" class="w-4 h-4 text-blue-600"></i> Buscar e filtrar
+        </h3>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Pesquisar</label>
+        <div class="relative mb-3">
+          <input id="filtroTexto" type="search" placeholder="Título, pauta, palestrante..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">De</label>
+            <input id="filtroDataInicio" type="date" class="w-full p-2 border border-slate-200 rounded-xl text-xs">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Até</label>
+            <input id="filtroDataFim" type="date" class="w-full p-2 border border-slate-200 rounded-xl text-xs">
+          </div>
+        </div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Área / categoria</label>
+        <select id="filtroCategoria" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white">
+          <option value="">Todas as áreas</option>
+        </select>
+        <button id="btnLimparFiltros" class="w-full mt-3 py-2 text-xs text-slate-500 hover:text-slate-800 underline">Limpar filtros</button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <h3 class="text-xs uppercase tracking-wider font-bold text-slate-700 mb-3">Próximos eventos</h3>
+        <div id="proximosEventos" class="space-y-2"></div>
+      </div>
+    </aside>
+
+    <section class="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-5">
+      <div id="calendar"></div>
+    </section>
+  </section>
+</main>
+
+<main id="adminApp" class="hidden max-w-7xl mx-auto px-4 py-6">
+  <div id="adminLoginView" class="max-w-xl mx-auto">
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+      <div class="bg-blue-950 p-7 text-white">
+        <span class="inline-flex items-center gap-2 text-xs uppercase tracking-wider font-bold text-blue-300">
+          <i data-lucide="shield-check" class="w-4 h-4"></i> Acesso restrito
+        </span>
+        <h2 class="text-2xl font-black mt-2">Área administrativa</h2>
+        <p class="text-sm text-blue-200 mt-1">Somente usuários previamente autorizados da ATI.</p>
+      </div>
+      <form id="formLoginAdmin" class="p-7 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">E-mail institucional</label>
+          <input id="loginEmail" type="email" autocomplete="email" required placeholder="nome@ati.pe.gov.br"
+                 class="w-full p-3 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500">
+          <p class="text-[11px] text-slate-400 mt-1">Use exclusivamente um endereço <strong>@ati.pe.gov.br</strong> autorizado pelo administrador.</p>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+          <i data-lucide="mail" class="w-4 h-4"></i> Enviar link de acesso
+        </button>
+        <div id="loginMessage" class="hidden p-3 rounded-xl text-xs"></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="adminPanelView" class="hidden space-y-5">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <span class="text-[10px] uppercase tracking-wider font-bold text-blue-600">Gestão</span>
+        <h2 class="text-2xl font-black text-slate-900">Painel administrativo</h2>
+        <p class="text-xs text-slate-500">Eventos, inscrições, presença e usuários autorizados.</p>
+        <span id="appVersionBadge" class="inline-flex mt-2 items-center rounded-full bg-slate-100 border border-slate-200 px-2 py-1 text-[10px] font-bold text-slate-500">Versão 2.2.0</span>
+        <p class="text-[10px] text-slate-400 mt-1">Controle de versão ativo • alterações registradas no CHANGELOG.md</p>
+      </div>
+      <button id="btnNovoEvento" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-4 py-3 rounded-xl text-xs flex items-center gap-2 shadow-sm">
+        <i data-lucide="plus-circle" class="w-4 h-4"></i> Novo evento
+      </button>
+    </div>
+
+    <div class="admin-tabs-wrap bg-slate-100/90 border border-slate-200 rounded-2xl p-1.5 shadow-sm" aria-label="Navegação administrativa">
+      <nav id="adminTabs" class="admin-tabs" role="tablist" aria-label="Seções do painel">
+        <button type="button" class="admin-tab active" data-admin-tab="dashboard" role="tab" aria-selected="true" aria-controls="adminTabDashboard">
+          <i data-lucide="layout-dashboard"></i><span>Visão geral</span>
+        </button>
+        <button type="button" class="admin-tab" data-admin-tab="eventos" role="tab" aria-selected="false" aria-controls="adminTabEventos">
+          <i data-lucide="calendar-days"></i><span>Eventos</span>
+        </button>
+        <button type="button" class="admin-tab" data-admin-tab="inscricoes" role="tab" aria-selected="false" aria-controls="adminTabInscricoes">
+          <i data-lucide="users"></i><span>Inscrições</span>
+        </button>
+        <button type="button" id="adminTabUsuariosBtn" class="admin-tab hidden" data-admin-tab="usuarios" role="tab" aria-selected="false" aria-controls="adminTabUsuarios">
+          <i data-lucide="shield-user"></i><span>Usuários</span>
+        </button>
+      </nav>
+    </div>
+
+    <section id="adminTabDashboard" class="admin-tab-panel space-y-5" role="tabpanel">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div class="bg-white rounded-2xl border p-4"><span id="admTotalEventos" class="block text-2xl font-black">0</span><span class="text-[10px] text-slate-500">Eventos</span></div>
+        <div class="bg-white rounded-2xl border p-4"><span id="admFuturos" class="block text-2xl font-black text-blue-600">0</span><span class="text-[10px] text-slate-500">Futuros</span></div>
+        <div class="bg-white rounded-2xl border p-4"><span id="admRealizados" class="block text-2xl font-black text-emerald-600">0</span><span class="text-[10px] text-slate-500">Realizados</span></div>
+        <div class="bg-white rounded-2xl border p-4"><span id="admInscricoes" class="block text-2xl font-black text-violet-600">0</span><span class="text-[10px] text-slate-500">Inscrições</span></div>
+        <div class="bg-white rounded-2xl border p-4"><span id="admCertificados" class="block text-2xl font-black text-amber-600">0</span><span class="text-[10px] text-slate-500">Presenças</span></div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2 bg-white rounded-2xl border shadow-sm p-5">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div><h3 class="font-bold text-slate-900">Resumo dos eventos</h3><p class="text-[11px] text-slate-500">Use a aba Eventos para editar ou excluir.</p></div>
+            <button type="button" data-admin-goto="eventos" class="text-xs font-bold text-blue-600 hover:text-blue-800">Ver eventos →</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-y"><tr><th class="p-3">Evento</th><th class="p-3">Data</th><th class="p-3">Status</th><th class="p-3">Inscritos</th></tr></thead>
+              <tbody id="adminResumoEventosBody" class="divide-y"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border shadow-sm p-5">
+          <h3 class="font-bold text-slate-900 mb-4">Distribuição por categoria</h3>
+          <div class="h-64"><canvas id="adminChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="adminTabEventos" class="admin-tab-panel hidden space-y-5" role="tabpanel" aria-hidden="true">
+      <div class="bg-white rounded-2xl border shadow-sm p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div><h3 class="font-bold text-slate-900">Eventos cadastrados</h3><p class="text-xs text-slate-500">Crie, edite, publique e acompanhe os eventos.</p></div>
+          <input id="adminBuscaEvento" type="search" placeholder="Pesquisar evento..." class="px-3 py-2.5 border border-slate-200 rounded-xl text-xs w-full sm:w-56">
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs min-w-[760px]">
+            <thead class="bg-slate-50 border-y"><tr><th class="p-3">Evento</th><th class="p-3">Data</th><th class="p-3">Status</th><th class="p-3">Inscritos</th><th class="p-3 text-right">Ações</th></tr></thead>
+            <tbody id="adminEventosBody" class="divide-y"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="adminTabInscricoes" class="admin-tab-panel hidden space-y-5" role="tabpanel" aria-hidden="true">
+      <div class="bg-white rounded-2xl border shadow-sm p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div><h3 class="font-bold text-slate-900">Inscrições</h3><p class="text-xs text-slate-500">Somente usuários administrativos autorizados conseguem visualizar estes dados.</p></div>
+          <input id="adminBuscaInscricao" type="search" placeholder="Nome, e-mail ou evento..." class="px-3 py-2.5 border border-slate-200 rounded-xl text-xs w-full sm:w-64">
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs min-w-[820px]">
+            <thead class="bg-slate-50 border-y"><tr><th class="p-3">Participante</th><th class="p-3">E-mail</th><th class="p-3">Evento</th><th class="p-3">Data</th><th class="p-3">Presença</th><th class="p-3 text-right">Ação</th></tr></thead>
+            <tbody id="adminInscricoesBody" class="divide-y"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="adminTabUsuarios" class="admin-tab-panel hidden space-y-5" role="tabpanel" aria-hidden="true">
+      <div class="bg-white rounded-2xl border shadow-sm p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div><h3 class="font-bold text-slate-900">Usuários autorizados</h3><p class="text-xs text-slate-500">O cadastro libera o acesso administrativo; o usuário entra pelo link enviado ao e-mail institucional.</p></div>
+          <button id="btnNovoUsuario" type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2"><i data-lucide="user-plus" class="w-4 h-4"></i> Autorizar e-mail</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs min-w-[700px]">
+            <thead class="bg-slate-50 border-y"><tr><th class="p-3">Nome</th><th class="p-3">E-mail</th><th class="p-3">Perfil</th><th class="p-3">Status</th><th class="p-3 text-right">Ações</th></tr></thead>
+            <tbody id="adminUsuariosBody" class="divide-y"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- Modal evento -->
+<div id="modalEvento" class="fixed inset-0 modal-backdrop hidden items-start justify-center z-50 p-3 md:p-6 pt-8">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col">
+    <div class="px-6 py-4 bg-slate-50 border-b flex items-center justify-between">
+      <div>
+        <span id="modalEventoStatus" class="text-[10px] uppercase tracking-wider font-bold text-blue-600">Novo</span>
+        <h3 id="modalEventoTitulo" class="font-black text-slate-900">Criar evento</h3>
+      </div>
+      <button data-close="modalEvento" class="p-2 rounded-full hover:bg-slate-200"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+
+    <form id="formEvento" class="p-6 overflow-y-auto space-y-4">
+      <input type="hidden" id="eventoId">
+      <input type="hidden" id="eventoImagemPath">
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Título *</label>
+        <input id="titulo" required class="w-full p-3 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nome do evento">
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Início *</label><input id="dataInicio" type="datetime-local" required class="w-full p-3 border rounded-xl text-xs"></div>
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Término *</label><input id="dataFim" type="datetime-local" required class="w-full p-3 border rounded-xl text-xs"></div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Categoria *</label>
+          <select id="categoriaSelect" required class="w-full p-3 border rounded-xl text-xs bg-white"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Local / modalidade *</label>
+          <input id="local" required class="w-full p-3 border rounded-xl text-xs" placeholder="Auditório, Teams, Recife...">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Card / imagem do evento</label>
+        <div id="dropzone" class="dropzone border-2 border-dashed border-slate-300 rounded-2xl p-5 text-center cursor-pointer transition">
+          <input id="imagemArquivo" type="file" accept="image/jpeg,image/png,image/webp" class="hidden">
+          <div id="uploadPlaceholder">
+            <i data-lucide="image-plus" class="w-8 h-8 mx-auto text-slate-400"></i>
+            <p class="font-bold text-sm text-slate-700 mt-2">Clique ou arraste a imagem</p>
+            <p class="text-[11px] text-slate-400 mt-1">Recomendado: <strong>1080 × 1350 px (4:5)</strong> • JPG, PNG ou WebP • máximo <strong>2 MB</strong></p>
+          </div>
+          <div id="uploadPreview" class="hidden">
+            <img id="previewImagem" class="max-h-56 mx-auto rounded-xl object-contain">
+            <p id="previewInfo" class="text-[10px] text-slate-500 mt-2"></p>
+            <button id="btnRemoverImagem" type="button" class="mt-2 text-xs text-red-600 underline">Remover imagem</button>
+          </div>
+        </div>
+        <p class="text-[10px] text-slate-400 mt-1">A imagem será armazenada no Firebase Storage. A regra de segurança limita uploads a administradores/editor autorizados.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Vagas (0 = ilimitado)</label><input id="limiteVagas" type="number" min="0" value="0" class="w-full p-3 border rounded-xl text-xs"></div>
+        <div class="sm:col-span-2"><label class="block text-xs font-semibold text-slate-600 mb-1">Link Teams / Meet</label><input id="linkMeet" type="url" class="w-full p-3 border rounded-xl text-xs" placeholder="https://..."></div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Convidados por e-mail</label>
+        <input id="convidados" class="w-full p-3 border rounded-xl text-xs" placeholder="nome@ati.pe.gov.br, pessoa@exemplo.com">
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <input id="realizador" required class="w-full p-3 border rounded-xl text-xs" placeholder="Realização / área">
+        <input id="palestrantes" class="w-full p-3 border rounded-xl text-xs" placeholder="Palestrante(s)">
+      </div>
+
+      <div class="flex items-center gap-4">
+        <label class="flex items-center gap-2 text-xs font-semibold"><input id="temCertificado" type="checkbox" class="w-4 h-4"> Gera certificado</label>
+        <label id="campoHoras" class="hidden flex items-center gap-2 text-xs">Carga horária <input id="horasCertificado" type="number" min="1" value="1" class="w-16 p-2 border rounded-lg text-xs"> h</label>
+      </div>
+
+      <input id="linkMaterial" type="url" class="w-full p-3 border rounded-xl text-xs" placeholder="Link de material / slides">
+      <textarea id="descricao" rows="4" class="w-full p-3 border rounded-xl text-xs" placeholder="Descrição, pauta ou informações adicionais"></textarea>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t">
+        <label class="flex items-center gap-2 text-xs font-semibold"><input id="publicado" type="checkbox" checked class="w-4 h-4"> Publicar no calendário público</label>
+        <div class="flex gap-2">
+          <button type="button" data-close="modalEvento" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-100">Cancelar</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold">Salvar evento</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal evento público -->
+<div id="modalPublicEvento" class="fixed inset-0 modal-backdrop hidden items-start justify-center z-50 p-3 md:p-6 pt-8">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[92vh] overflow-y-auto">
+    <div id="publicEventImageBox" class="hidden bg-slate-950 rounded-t-3xl overflow-hidden">
+      <img id="publicEventImage" class="w-full max-h-[420px] object-contain">
+    </div>
+    <div class="p-6">
+      <div class="flex justify-between gap-4">
+        <div><span id="publicEventCategory" class="inline-flex px-3 py-1 rounded-full text-[10px] font-bold text-white"></span><h3 id="publicEventTitle" class="text-2xl font-black mt-2 text-slate-900"></h3></div>
+        <button data-close="modalPublicEvento" class="p-2 rounded-full hover:bg-slate-100 h-fit"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="space-y-2 text-xs text-slate-600 my-5">
+        <p><i data-lucide="clock" class="inline w-4 h-4 mr-1 text-slate-400"></i><span id="publicEventDate"></span></p>
+        <p><i data-lucide="map-pin" class="inline w-4 h-4 mr-1 text-slate-400"></i><span id="publicEventLocal"></span></p>
+        <p><i data-lucide="building-2" class="inline w-4 h-4 mr-1 text-slate-400"></i><span id="publicEventOrganizer"></span></p>
+        <p><i data-lucide="user" class="inline w-4 h-4 mr-1 text-slate-400"></i><span id="publicEventSpeakers"></span></p>
+      </div>
+      <div class="border-t pt-4">
+        <h4 class="font-bold text-sm mb-2">Descrição</h4>
+        <p id="publicEventDescription" class="text-sm text-slate-600 whitespace-pre-line leading-relaxed"></p>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-5 pt-4 border-t">
+        <button id="btnPublicInscricao" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5"><i data-lucide="user-plus" class="w-4 h-4"></i> Inscrever-se</button>
+        <a id="btnPublicMeet" target="_blank" class="hidden bg-slate-100 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold">Acessar transmissão</a>
+        <a id="btnPublicMaterial" target="_blank" class="hidden bg-slate-100 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold">Material</a>
+        <a id="btnPublicGoogleCalendar" target="_blank" class="bg-blue-50 text-blue-700 px-4 py-2.5 rounded-xl text-xs font-bold">Google Agenda</a>
+        <button id="btnPublicShareEvent" class="bg-slate-100 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold">Compartilhar</button>
+      </div>
+      <div id="publicRegistrationStatus" class="hidden mt-4"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal inscrição -->
+<div id="modalInscricao" class="fixed inset-0 modal-backdrop hidden items-center justify-center z-50 p-3">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6">
+    <div class="flex justify-between items-start">
+      <div><span class="text-[10px] uppercase tracking-wider font-bold text-blue-600">Inscrição</span><h3 class="text-xl font-black mt-1">Garantir minha vaga</h3></div>
+      <button data-close="modalInscricao" class="p-2 rounded-full hover:bg-slate-100"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <form id="formInscricao" class="space-y-3 mt-5">
+      <input id="inscricaoNome" required class="w-full p-3 border rounded-xl text-sm" placeholder="Nome completo">
+      <input id="inscricaoEmail" required type="email" class="w-full p-3 border rounded-xl text-sm" placeholder="Seu e-mail">
+      <p class="text-[10px] text-slate-400">A inscrição é pública e não exige login. O e-mail é usado somente para identificação da inscrição.</p>
+      <button class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">Confirmar inscrição</button>
+    </form>
+    <div id="inscricaoResult" class="hidden"></div>
+  </div>
+</div>
+
+<!-- Modal usuário -->
+<div id="modalUsuario" class="fixed inset-0 modal-backdrop hidden items-center justify-center z-50 p-3">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6">
+    <div class="flex justify-between items-start">
+      <div><span class="text-[10px] uppercase tracking-wider font-bold text-blue-600">Administração</span><h3 id="modalUsuarioTitle" class="text-xl font-black mt-1">Autorizar e-mail</h3></div>
+      <button data-close="modalUsuario" class="p-2 rounded-full hover:bg-slate-100"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <form id="formUsuario" class="space-y-3 mt-5">
+      <input type="hidden" id="usuarioEmailOriginal">
+      <input id="usuarioNome" required class="w-full p-3 border rounded-xl text-sm" placeholder="Nome">
+      <input id="usuarioEmail" required type="email" class="w-full p-3 border rounded-xl text-sm" placeholder="nome@ati.pe.gov.br">
+      <select id="usuarioPerfil" class="w-full p-3 border rounded-xl text-sm"><option value="editor">Editor</option><option value="admin">Administrador</option></select>
+      <label class="flex items-center gap-2 text-xs font-semibold"><input id="usuarioAtivo" type="checkbox" checked class="w-4 h-4"> Acesso ativo</label>
+      <button class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm">Salvar autorização</button>
+    </form>
+  </div>
+</div>
+
+<div id="toast" class="fixed bottom-5 right-5 z-[80] hidden max-w-sm"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, sendSignInLinkToEmail, isSignInWithEmailLink,
+  signInWithEmailLink, signOut
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, getDoc, getDocs, onSnapshot, query, where,
+  orderBy, limit, addDoc, setDoc, updateDoc, deleteDoc, serverTimestamp,
+  increment
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL, deleteObject
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyANAPqfHQeoU4zgXn5cHmVFhI0PGgVUvTA",
+  authDomain: "calendario-eventos-ati.firebaseapp.com",
+  projectId: "calendario-eventos-ati",
+  storageBucket: "calendario-eventos-ati.firebasestorage.app",
+  messagingSenderId: "790004139032",
+  appId: "1:790004139032:web:151288e0fad4f827aaef6d"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+const DOMAIN = "@ati.pe.gov.br";
+const CATEGORIES = [
+  "Segurança da Informação", "Inteligência Artificial", "Desenvolvimento de Software",
+  "Infraestrutura e Backup", "Gestão e TIC", "Governança", "Geral (Não Tecnologia)", "Outro"
+];
+const COLORS = {
+  "Segurança da Informação":"#d97706", "Inteligência Artificial":"#8b5cf6",
+  "Desenvolvimento de Software":"#2563eb", "Infraestrutura e Backup":"#059669",
+  "Gestão e TIC":"#dc2626", "Governança":"#0284c7", "Geral (Não Tecnologia)":"#64748b", "Outro":"#475569"
+};
+
+let calendar = null;
+let allPublicEvents = [];
+let allAdminEvents = [];
+let allAdminRegistrations = [];
+let selectedPublicEvent = null;
+let currentAdmin = null;
+let currentAdminRole = null;
+let adminChart = null;
+let pendingImageFile = null;
+let removedExistingImage = false;
+
+const $ = id => document.getElementById(id);
+const route = () => window.location.pathname.replace(/\/+$/, "") || "/";
+const isAdminRoute = () => route() === "/admin";
+const isEventRoute = () => route().startsWith("/evento/");
+
+function show(id, display="flex") { $(id).classList.remove("hidden"); $(id).style.display = display; }
+function hide(id) { $(id).classList.add("hidden"); $(id).style.display = "none"; }
+function toast(message, type="info") {
+  const el = $("toast");
+  const cls = type === "error" ? "bg-red-600" : type === "success" ? "bg-emerald-600" : "bg-slate-900";
+  el.innerHTML = `<div class="${cls} text-white px-4 py-3 rounded-xl shadow-xl text-xs font-semibold">${escapeHtml(message)}</div>`;
+  show("toast");
+  setTimeout(() => hide("toast"), 3500);
+}
+function escapeHtml(value="") {
+  return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+function fmtDate(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleString("pt-BR", {dateStyle:"short", timeStyle:"short"});
+}
+function slugify(s) {
+  return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,90);
+}
+function isAtiEmail(email) {
+  return typeof email === "string" && email.trim().toLowerCase().endsWith(DOMAIN);
+}
+function normalizeEmail(email) { return email.trim().toLowerCase(); }
+
+function openModal(id) { show(id); lucide.createIcons(); }
+function closeModal(id) { hide(id); }
+document.addEventListener("click", e => {
+  const close = e.target.closest("[data-close]");
+  if (close) closeModal(close.dataset.close);
+});
+
+function setupCategories() {
+  $("filtroCategoria").innerHTML = `<option value="">Todas as áreas</option>` + CATEGORIES.map(c => `<option>${escapeHtml(c)}</option>`).join("");
+  $("categoriaSelect").innerHTML = CATEGORIES.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+}
+function initCalendar() {
+  if (calendar) return;
+  calendar = new FullCalendar.Calendar($("calendar"), {
+    initialView: "dayGridMonth",
+    locale: "pt-br",
+    height: "auto",
+    headerToolbar: {left:"prev,next today", center:"title", right:"dayGridMonth,timeGridWeek,listMonth"},
+    buttonText: {today:"Hoje", month:"Mês", week:"Semana", list:"Lista"},
+    events: [],
+    eventClick: info => abrirEventoPublico(info.event.extendedProps),
+  });
+  calendar.render();
+}
+function applyPublicFilters() {
+  const text = $("filtroTexto").value.trim().toLowerCase();
+  const from = $("filtroDataInicio").value;
+  const to = $("filtroDataFim").value;
+  const cat = $("filtroCategoria").value;
+  const filtered = allPublicEvents.filter(ev => {
+    const hay = [ev.title, ev.descricao, ev.palestrantes, ev.realizador].filter(Boolean).join(" ").toLowerCase();
+    const date = String(ev.start || "").slice(0,10);
+    return (!text || hay.includes(text)) && (!cat || ev.categoria === cat) && (!from || date >= from) && (!to || date <= to);
+  });
+  calendar.removeAllEvents();
+  calendar.addEventSource(filtered.map(ev => ({
+    id: ev.id, title: ev.title, start: ev.start, end: ev.end,
+    backgroundColor: COLORS[ev.categoria] || "#2563eb", extendedProps: ev
+  })));
+  renderUpcoming(filtered);
+}
+function renderUpcoming(events) {
+  const now = Date.now();
+  const next = [...events].filter(e => new Date(e.start).getTime() >= now).sort((a,b)=>new Date(a.start)-new Date(b.start)).slice(0,5);
+  $("proximosEventos").innerHTML = next.length ? next.map(ev => `
+    <button class="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-100" data-open-event="${escapeHtml(ev.id)}">
+      <span class="block text-[10px] font-bold uppercase" style="color:${COLORS[ev.categoria] || "#2563eb"}">${escapeHtml(ev.categoria || "Evento")}</span>
+      <strong class="block text-xs text-slate-800 mt-1 line-clamp-2">${escapeHtml(ev.title)}</strong>
+      <span class="block text-[10px] text-slate-400 mt-1">${fmtDate(ev.start)}</span>
+    </button>`).join("") : `<p class="text-xs text-slate-400 italic">Nenhum próximo evento.</p>`;
+}
+document.addEventListener("click", e => {
+  const btn = e.target.closest("[data-open-event]");
+  if (btn) {
+    const ev = allPublicEvents.find(x => x.id === btn.dataset.openEvent);
+    if (ev) abrirEventoPublico(ev);
+  }
+});
+
+function publicEventUrl(id) { return `${location.origin}/evento/${encodeURIComponent(id)}`; }
+function calendarGoogleUrl(ev) {
+  const start = new Date(ev.start).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/,"Z");
+  const end = new Date(ev.end).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/,"Z");
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.title)}&dates=${start}/${end}&details=${encodeURIComponent(ev.descricao || "")}&location=${encodeURIComponent(ev.local || "")}`;
+}
+function abrirEventoPublico(ev, updateUrl=true) {
+  selectedPublicEvent = ev;
+  $("publicEventTitle").textContent = ev.title;
+  $("publicEventCategory").textContent = ev.categoria || "Evento";
+  $("publicEventCategory").style.backgroundColor = COLORS[ev.categoria] || "#2563eb";
+  $("publicEventDate").textContent = `${fmtDate(ev.start)} até ${fmtDate(ev.end)}`;
+  $("publicEventLocal").textContent = ev.local || "Local não informado";
+  $("publicEventOrganizer").textContent = `Realização: ${ev.realizador || "ATI"}`;
+  $("publicEventSpeakers").textContent = `Palestrante: ${ev.palestrantes || "A definir"}`;
+  $("publicEventDescription").textContent = ev.descricao || "Nenhuma descrição informada.";
+  const imgBox = $("publicEventImageBox");
+  if (ev.linkConviteImg) { $("publicEventImage").src = ev.linkConviteImg; show("publicEventImageBox"); } else hide("publicEventImageBox");
+  const meet = $("btnPublicMeet");
+  if (ev.linkMeet) { meet.href = ev.linkMeet; show("btnPublicMeet"); } else hide("btnPublicMeet");
+  const mat = $("btnPublicMaterial");
+  if (ev.linkMaterial) { mat.href = ev.linkMaterial; show("btnPublicMaterial"); } else hide("btnPublicMaterial");
+  $("btnPublicGoogleCalendar").href = calendarGoogleUrl(ev);
+  $("btnPublicInscricao").textContent = ev.limiteVagas > 0 ? `Inscrever-se • ${ev.limiteVagas} vagas` : "Inscrever-se";
+  hide("publicRegistrationStatus");
+  openModal("modalPublicEvento");
+  if (updateUrl) history.pushState({eventId:ev.id}, "", `/evento/${encodeURIComponent(ev.id)}`);
+}
+async function loadPublicEventFromRoute() {
+  if (!isEventRoute()) return;
+  const id = decodeURIComponent(route().split("/").pop());
+  try {
+    const snap = await getDoc(doc(db, "eventos", id));
+    if (snap.exists() && snap.data().publicado === true) {
+      abrirEventoPublico({id:snap.id, ...snap.data()}, false);
+    } else {
+      toast("Evento não encontrado ou não está publicado.", "error");
+      history.replaceState({}, "", "/");
+    }
+  } catch (e) {
+    console.error(e);
+    toast("Não foi possível abrir o evento.", "error");
+  }
+}
+
+async function sha256(value) {
+  const data = new TextEncoder().encode(value);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+$("btnPublicInscricao").addEventListener("click", () => {
+  if (!selectedPublicEvent) return;
+  $("inscricaoNome").value = "";
+  $("inscricaoEmail").value = "";
+  hide("inscricaoResult");
+  openModal("modalInscricao");
+});
+$("formInscricao").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!selectedPublicEvent) return;
+  const nome = $("inscricaoNome").value.trim();
+  const email = normalizeEmail($("inscricaoEmail").value);
+  if (nome.length < 3 || !email.includes("@")) return toast("Informe nome e e-mail válidos.", "error");
+  const id = await sha256(`${selectedPublicEvent.id}|${email}`);
+  try {
+    await createRegistration(id, selectedPublicEvent.id, nome, email);
+    closeModal("modalInscricao");
+    $("publicRegistrationStatus").innerHTML = `<div class="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs text-emerald-800"><strong>Inscrição confirmada.</strong><br>Guarde o e-mail informado para eventual comunicação da organização.</div>`;
+    show("publicRegistrationStatus");
+    toast("Inscrição realizada com sucesso.", "success");
+  } catch (err) {
+    console.error(err);
+    if (err.code === "permission-denied") toast("Não foi possível concluir a inscrição. O evento pode estar encerrado.", "error");
+    else toast("Não foi possível realizar a inscrição.", "error");
+  }
+});
+async function createRegistration(id, eventId, nome, email) {
+  await setDoc(doc(db,"inscricoes",id), {
+    eventId, nome, email, criadoEm: serverTimestamp(), presente:false
+  }, {merge:false});
+}
+
+$("btnPublicShareEvent").addEventListener("click", async () => {
+  if (!selectedPublicEvent) return;
+  const url = publicEventUrl(selectedPublicEvent.id);
+  if (navigator.share) await navigator.share({title:selectedPublicEvent.title, text:"Confira este evento da ATI.", url});
+  else { await navigator.clipboard.writeText(url); toast("Link do evento copiado.", "success"); }
+});
+$("btnPublicCompartilhar").addEventListener("click", async () => {
+  const url = location.origin + "/";
+  if (navigator.share) await navigator.share({title:"Calendário de Eventos ATI", url});
+  else { await navigator.clipboard.writeText(url); toast("Link do calendário copiado.", "success"); }
+});
+$("btnPublicHoje").addEventListener("click", () => calendar?.today());
+$("btnLimparFiltros").addEventListener("click", () => {
+  $("filtroTexto").value=""; $("filtroDataInicio").value=""; $("filtroDataFim").value=""; $("filtroCategoria").value=""; applyPublicFilters();
+});
+["filtroTexto","filtroDataInicio","filtroDataFim","filtroCategoria"].forEach(id => $(id).addEventListener(id==="filtroTexto"?"input":"change", applyPublicFilters));
+
+function listenPublicEvents() {
+  const q = query(collection(db,"eventos"), where("publicado","==",true), orderBy("start","asc"));
+  onSnapshot(q, snap => {
+    allPublicEvents = snap.docs.map(d=>({id:d.id,...d.data()}));
+    applyPublicFilters();
+    loadPublicEventFromRoute();
+  }, err => {
+    console.error(err);
+    toast("Não foi possível carregar o calendário.", "error");
+  });
+}
+
+async function sendAdminLoginLink(email) {
+  const clean = normalizeEmail(email);
+  if (!isAtiEmail(clean)) throw new Error("Use um e-mail @ati.pe.gov.br.");
+  const actionCodeSettings = {
+    url: `${location.origin}/admin`,
+    handleCodeInApp: true
+  };
+  await sendSignInLinkToEmail(auth, clean, actionCodeSettings);
+  localStorage.setItem("atiAdminEmailForSignIn", clean);
+}
+$("formLoginAdmin").addEventListener("submit", async e => {
+  e.preventDefault();
+  const msg = $("loginMessage");
+  try {
+    await sendAdminLoginLink($("loginEmail").value);
+    msg.className = "p-3 rounded-xl text-xs bg-emerald-50 text-emerald-800 border border-emerald-100";
+    msg.textContent = "Link enviado. Abra o e-mail no mesmo dispositivo para concluir o acesso.";
+    show("loginMessage");
+  } catch (err) {
+    console.error(err);
+    msg.className = "p-3 rounded-xl text-xs bg-red-50 text-red-800 border border-red-100";
+    msg.textContent = err.message || "Não foi possível enviar o link.";
+    show("loginMessage");
+  }
+});
+
+async function completeEmailLinkIfNeeded() {
+  if (!isSignInWithEmailLink(auth, location.href)) return;
+  let email = localStorage.getItem("atiAdminEmailForSignIn");
+  if (!email) email = window.prompt("Confirme seu e-mail @ati.pe.gov.br para concluir o acesso:");
+  if (!email || !isAtiEmail(email)) {
+    toast("E-mail institucional inválido.", "error");
+    return;
+  }
+  try {
+    await signInWithEmailLink(auth, normalizeEmail(email), location.href);
+    localStorage.removeItem("atiAdminEmailForSignIn");
+    history.replaceState({}, "", "/admin");
+  } catch (err) {
+    console.error(err);
+    toast("O link é inválido, expirou ou o e-mail informado não corresponde ao destinatário.", "error");
+  }
+}
+
+async function loadAdminProfile(user) {
+  if (!user?.email || !isAtiEmail(user.email) || !user.emailVerified) {
+    await signOut(auth);
+    return null;
+  }
+  const emailKey = normalizeEmail(user.email);
+  const snap = await getDoc(doc(db,"administradores",emailKey));
+  if (!snap.exists() || snap.data().ativo !== true) {
+    await signOut(auth);
+    toast("Seu e-mail não está autorizado para a área administrativa.", "error");
+    return null;
+  }
+  const profile = snap.data();
+  return {email:emailKey, nome:profile.nome || user.email, role:profile.role || "editor"};
+}
+
+onAuthStateChanged(auth, async user => {
+  if (!isAdminRoute()) return;
+  if (!user) {
+    currentAdmin = null; currentAdminRole = null;
+    hide("adminPanelView"); show("adminLoginView");
+    $("publicHeaderActions").classList.remove("hidden");
+    $("adminHeaderActions").classList.add("hidden");
+    return;
+  }
+  try {
+    const profile = await loadAdminProfile(user);
+    if (!profile) return;
+    currentAdmin = profile.email;
+    currentAdminRole = profile.role;
+    hide("adminLoginView"); show("adminPanelView","block");
+    hide("publicHeaderActions"); show("adminHeaderActions","flex");
+    $("adminIdentity").textContent = `${profile.nome} • ${profile.role === "admin" ? "Administrador" : "Editor"}`;
+    if (profile.role === "admin") { show("adminTabUsuariosBtn"); loadAdminUsers(); }
+    else hide("adminTabUsuariosBtn");
+    loadAdminEvents();
+    loadAdminRegistrations();
+    setAdminTab("dashboard");
+  } catch (err) {
+    console.error(err);
+    await signOut(auth);
+  }
+});
+
+$("btnLogout").addEventListener("click", () => signOut(auth));
+
+function setAdminTab(name, updateUrl = true) {
+  const allowed = ["dashboard", "eventos", "inscricoes", "usuarios"];
+  const requested = String(name || "").toLowerCase();
+  name = allowed.includes(requested) ? requested : "dashboard";
+
+  // A aba Usuários só existe para administradores.
+  if (name === "usuarios" && !canManageUsers()) name = "dashboard";
+
+  const tabButtons = [...document.querySelectorAll("#adminTabs [data-admin-tab]")];
+  const panels = [...document.querySelectorAll("#adminPanelView > .admin-tab-panel")];
+
+  tabButtons.forEach(btn => {
+    const visible = !btn.hidden && !btn.classList.contains("hidden");
+    const active = visible && btn.dataset.adminTab === name;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-selected", active ? "true" : "false");
+    btn.setAttribute("tabindex", active ? "0" : "-1");
+  });
+
+  panels.forEach(panel => {
+    const panelName = panel.id.replace(/^adminTab/, "").toLowerCase();
+    const active = panelName === name;
+    panel.hidden = !active;
+    panel.classList.toggle("hidden", !active);
+    panel.setAttribute("aria-hidden", active ? "false" : "true");
+  });
+
+  if (updateUrl) {
+    const nextHash = `#${name}`;
+    if (location.hash !== nextHash) {
+      history.replaceState(null, "", `${location.pathname}${location.search}${nextHash}`);
+    }
+  }
+
+  // Só inicializa/renderiza o conteúdo da aba ativa.
+  if (name === "dashboard") {
+    renderAdminMetrics();
+    renderAdminSummary();
+    if (window.Chart && $("adminChart")) renderAdminChart();
+  } else if (name === "eventos") {
+    renderAdminEvents();
+  } else if (name === "inscricoes") {
+    renderAdminRegistrations();
+  } else if (name === "usuarios") {
+    loadAdminUsers();
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
+
+// Os listeners são ligados diretamente aos botões. Isso evita depender de
+// bubbling/delegação e garante que clique no ícone ou no texto ative a aba.
+const adminTabs = $("adminTabs");
+if (adminTabs) {
+  adminTabs.querySelectorAll("[data-admin-tab]").forEach(tab => {
+    const activate = event => {
+      if (tab.disabled || tab.hidden || tab.classList.contains("hidden")) return;
+      event.preventDefault();
+      setAdminTab(tab.dataset.adminTab);
+    };
+    tab.addEventListener("click", activate);
+    tab.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") activate(event);
+    });
+  });
+}
+
+document.addEventListener("click", e => {
+  const goto = e.target.closest("[data-admin-goto]");
+  if (goto) {
+    e.preventDefault();
+    setAdminTab(goto.dataset.adminGoto);
+  }
+});
+
+window.addEventListener("hashchange", () => {
+  if (!isAdminRoute()) return;
+  const requested = location.hash.replace(/^#/, "").toLowerCase();
+  setAdminTab(requested || "dashboard", false);
+});
+
+function renderAdminSummary() {
+  const events = [...allAdminEvents].sort((a,b)=>new Date(a.start)-new Date(b.start)).slice(0,6);
+  $("adminResumoEventosBody").innerHTML = events.length ? events.map(ev => {
+    const status = ev.status === "cancelado" ? ["Cancelado","bg-red-100 text-red-700"] : new Date(ev.end) < new Date() ? ["Realizado","bg-emerald-100 text-emerald-700"] : ev.publicado ? ["Publicado","bg-blue-100 text-blue-700"] : ["Rascunho","bg-slate-100 text-slate-600"];
+    return `<tr class="hover:bg-slate-50"><td class="p-3"><strong class="block text-slate-800">${escapeHtml(ev.title)}</strong><span class="text-[10px] text-slate-400">${escapeHtml(ev.categoria||"")}</span></td><td class="p-3 whitespace-nowrap">${fmtDate(ev.start)}</td><td class="p-3"><span class="px-2 py-1 rounded-full text-[10px] font-bold ${status[1]}">${status[0]}</span></td><td class="p-3 font-bold">${ev.totalInscritos||0}</td></tr>`;
+  }).join("") : `<tr><td colspan="4" class="p-8 text-center text-slate-400">Nenhum evento cadastrado.</td></tr>`;
+}
+
+async function loadAdminRegistrations() {
+  try {
+    const snap = await getDocs(collection(db,"inscricoes"));
+    allAdminRegistrations = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderAdminRegistrations();
+    renderAdminMetrics();
+  } catch (err) { console.error(err); toast("Erro ao carregar inscrições administrativas.", "error"); }
+}
+function renderAdminRegistrations() {
+  const term = ($("adminBuscaInscricao")?.value || "").trim().toLowerCase();
+  const byId = Object.fromEntries(allAdminEvents.map(ev=>[ev.id,ev]));
+  const rows = allAdminRegistrations.filter(r => {
+    const ev=byId[r.eventId];
+    return !term || [r.nome,r.email,ev?.title].join(" ").toLowerCase().includes(term);
+  }).sort((a,b)=>String(b.criadoEm?.seconds||0).localeCompare(String(a.criadoEm?.seconds||0)));
+  $("adminInscricoesBody").innerHTML = rows.length ? rows.map(r=>{
+    const ev=byId[r.eventId];
+    const presente=!!r.presente;
+    return `<tr class="hover:bg-slate-50"><td class="p-3 font-semibold">${escapeHtml(r.nome||"")}</td><td class="p-3">${escapeHtml(r.email||"")}</td><td class="p-3">${escapeHtml(ev?.title||r.eventId||"")}</td><td class="p-3 whitespace-nowrap">${r.criadoEm?.seconds ? fmtDate(new Date(r.criadoEm.seconds*1000).toISOString()) : "—"}</td><td class="p-3"><span class="px-2 py-1 rounded-full text-[10px] font-bold ${presente?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-600"}">${presente?"Presente":"Não registrada"}</span></td><td class="p-3 text-right"><button type="button" data-registration-presence="${escapeHtml(r.id)}" data-presente="${presente?"false":"true"}" class="px-3 py-1.5 rounded-lg ${presente?"bg-slate-100":"bg-emerald-50 text-emerald-700"} font-bold">${presente?"Desmarcar":"Marcar presença"}</button></td></tr>`;
+  }).join("") : `<tr><td colspan="6" class="p-8 text-center text-slate-400">Nenhuma inscrição encontrada.</td></tr>`;
+}
+
+$("adminBuscaInscricao")?.addEventListener("input", renderAdminRegistrations);
+
+document.addEventListener("click", async e => {
+  const btn=e.target.closest("[data-registration-presence]");
+  if (!btn) return;
+  try {
+    const value=btn.dataset.presente === "true";
+    await updateDoc(doc(db,"inscricoes",btn.dataset.registrationPresence),{presente:value, atualizadoEm:serverTimestamp()});
+    const row=allAdminRegistrations.find(x=>x.id===btn.dataset.registrationPresence);
+    if (row) row.presente=value;
+    await refreshRegistrationCounts();
+    renderAdminRegistrations(); renderAdminMetrics(); renderAdminSummary();
+    toast(value ? "Presença registrada." : "Presença removida.", "success");
+  } catch(err) { console.error(err); toast("Não foi possível atualizar a presença.", "error"); }
+});
+
+function canManageUsers() { return currentAdminRole === "admin"; }
+function canEditEvents() { return currentAdminRole === "admin" || currentAdminRole === "editor"; }
+
+function loadAdminEvents() {
+  const q = query(collection(db,"eventos"), orderBy("start","asc"));
+  onSnapshot(q, async snap => {
+    allAdminEvents = snap.docs.map(d=>({id:d.id,...d.data()}));
+    await refreshRegistrationCounts();
+    renderAdminEvents();
+    renderAdminMetrics();
+    renderAdminChart();
+    renderAdminSummary();
+  }, err => { console.error(err); toast("Erro ao carregar eventos administrativos.", "error"); });
+}
+async function refreshRegistrationCounts() {
+  if (!allAdminRegistrations.length) {
+    try {
+      const snaps = await getDocs(collection(db,"inscricoes"));
+      allAdminRegistrations = snaps.docs.map(d=>({id:d.id,...d.data()}));
+    } catch (err) { console.error(err); }
+  }
+  const counts = {};
+  const present = {};
+  allAdminRegistrations.forEach(r => {
+    counts[r.eventId]=(counts[r.eventId]||0)+1;
+    if (r.presente) present[r.eventId]=(present[r.eventId]||0)+1;
+  });
+  allAdminEvents = allAdminEvents.map(ev=>({...ev,totalInscritos:counts[ev.id]||0,totalPresencas:present[ev.id]||0}));
+}
+function renderAdminEvents() {
+  const term = $("adminBuscaEvento").value.trim().toLowerCase();
+  const events = allAdminEvents.filter(e => !term || [e.title,e.categoria,e.realizador].join(" ").toLowerCase().includes(term));
+  $("adminEventosBody").innerHTML = events.length ? events.map(ev => {
+    const status = ev.status === "cancelado" ? ["Cancelado","bg-red-100 text-red-700"] : new Date(ev.end) < new Date() ? ["Realizado","bg-emerald-100 text-emerald-700"] : ev.publicado ? ["Publicado","bg-blue-100 text-blue-700"] : ["Rascunho","bg-slate-100 text-slate-600"];
+    return `<tr class="hover:bg-slate-50">
+      <td class="p-3"><strong class="block text-slate-800">${escapeHtml(ev.title)}</strong><span class="text-[10px] text-slate-400">${escapeHtml(ev.categoria||"")}</span></td>
+      <td class="p-3 whitespace-nowrap">${fmtDate(ev.start)}</td>
+      <td class="p-3"><span class="px-2 py-1 rounded-full text-[10px] font-bold ${status[1]}">${status[0]}</span></td>
+      <td class="p-3 font-bold">${ev.totalInscritos||0}</td>
+      <td class="p-3 text-right whitespace-nowrap">
+        <button data-admin-edit="${ev.id}" class="px-2 py-1 bg-slate-100 rounded-lg">Editar</button>
+        <button data-admin-open="${ev.id}" class="px-2 py-1 bg-blue-50 text-blue-700 rounded-lg">Abrir</button>
+        ${currentAdminRole==="admin" ? `<button data-admin-delete="${ev.id}" class="px-2 py-1 bg-red-50 text-red-600 rounded-lg">Excluir</button>` : ""}
+      </td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="5" class="p-8 text-center text-slate-400">Nenhum evento encontrado.</td></tr>`;
+}
+$("adminBuscaEvento").addEventListener("input", renderAdminEvents);
+
+function renderAdminMetrics() {
+  const now = Date.now();
+  $("admTotalEventos").textContent = allAdminEvents.length;
+  $("admFuturos").textContent = allAdminEvents.filter(e=>new Date(e.start).getTime()>=now && e.status!=="cancelado").length;
+  $("admRealizados").textContent = allAdminEvents.filter(e=>new Date(e.end).getTime()<now && e.status!=="cancelado").length;
+  $("admInscricoes").textContent = allAdminEvents.reduce((a,e)=>a+(e.totalInscritos||0),0);
+  $("admCertificados").textContent = allAdminEvents.reduce((a,e)=>a+(e.totalPresencas||0),0);
+}
+function renderAdminChart() {
+  const counts = {};
+  allAdminEvents.forEach(e => counts[e.categoria||"Outro"]=(counts[e.categoria||"Outro"]||0)+1);
+  if (adminChart) adminChart.destroy();
+  adminChart = new Chart($("adminChart"), {
+    type:"doughnut",
+    data:{labels:Object.keys(counts),datasets:[{data:Object.values(counts),backgroundColor:Object.keys(counts).map(k=>COLORS[k]||"#475569")}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom"}}}
+  });
+}
+
+document.addEventListener("click", async e => {
+  const edit = e.target.closest("[data-admin-edit]");
+  const open = e.target.closest("[data-admin-open]");
+  const del = e.target.closest("[data-admin-delete]");
+  if (edit) openEventForm(allAdminEvents.find(x=>x.id===edit.dataset.adminEdit));
+  if (open) {
+    const ev=allAdminEvents.find(x=>x.id===open.dataset.adminOpen);
+    if (ev) abrirEventoPublico(ev);
+  }
+  if (del) {
+    const ev=allAdminEvents.find(x=>x.id===del.dataset.adminDelete);
+    if (!ev || !confirm(`Excluir definitivamente "${ev.title}"?`)) return;
+    try {
+      await deleteDoc(doc(db,"eventos",ev.id));
+      if (ev.imagemStoragePath) try { await deleteObject(ref(storage,ev.imagemStoragePath)); } catch {}
+      toast("Evento excluído.", "success");
+    } catch (err) { console.error(err); toast("Exclusão não permitida.", "error"); }
+  }
+});
+
+$("btnNovoEvento").addEventListener("click", () => openEventForm());
+function resetEventForm() {
+  $("formEvento").reset();
+  $("eventoId").value="";
+  $("eventoImagemPath").value="";
+  $("modalEventoStatus").textContent="Novo";
+  $("modalEventoTitulo").textContent="Criar evento";
+  $("publicado").checked=true;
+  $("limiteVagas").value=0;
+  $("categoriaSelect").value=CATEGORIES[0];
+  $("campoHoras").classList.add("hidden");
+  pendingImageFile=null; removedExistingImage=false;
+  hide("uploadPreview"); show("uploadPlaceholder","block");
+}
+function toLocalInput(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  const p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function openEventForm(ev=null) {
+  if (!canEditEvents()) return;
+  resetEventForm();
+  if (ev) {
+    $("modalEventoStatus").textContent="Edição";
+    $("modalEventoTitulo").textContent="Editar evento";
+    $("eventoId").value=ev.id;
+    $("eventoImagemPath").value=ev.imagemStoragePath||"";
+    $("titulo").value=ev.title||"";
+    $("dataInicio").value=toLocalInput(ev.start);
+    $("dataFim").value=toLocalInput(ev.end);
+    $("categoriaSelect").value=ev.categoria||CATEGORIES[0];
+    $("local").value=ev.local||"";
+    $("limiteVagas").value=ev.limiteVagas||0;
+    $("linkMeet").value=ev.linkMeet||"";
+    $("convidados").value=ev.convidados||"";
+    $("realizador").value=ev.realizador||"";
+    $("palestrantes").value=ev.palestrantes||"";
+    $("temCertificado").checked=!!ev.temCertificado;
+    $("horasCertificado").value=ev.horasCertificado||1;
+    $("linkMaterial").value=ev.linkMaterial||"";
+    $("descricao").value=ev.descricao||"";
+    $("publicado").checked=ev.publicado!==false;
+    if (ev.linkConviteImg) {
+      $("previewImagem").src=ev.linkConviteImg; $("previewInfo").textContent="Imagem atual";
+      show("uploadPreview"); hide("uploadPlaceholder");
+    }
+    $("campoHoras").classList.toggle("hidden", !ev.temCertificado);
+  }
+  openModal("modalEvento");
+}
+$("temCertificado").addEventListener("change", e => $("campoHoras").classList.toggle("hidden", !e.target.checked));
+
+const dropzone = $("dropzone");
+dropzone.addEventListener("click", e => { if (!e.target.closest("button")) $("imagemArquivo").click(); });
+dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.classList.add("dragover"); });
+dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+dropzone.addEventListener("drop", e => { e.preventDefault(); dropzone.classList.remove("dragover"); if (e.dataTransfer.files[0]) validateImage(e.dataTransfer.files[0]); });
+$("imagemArquivo").addEventListener("change", e => { if (e.target.files[0]) validateImage(e.target.files[0]); });
+$("btnRemoverImagem").addEventListener("click", e => { e.stopPropagation(); pendingImageFile=null; removedExistingImage=true; $("imagemArquivo").value=""; hide("uploadPreview"); show("uploadPlaceholder","block"); });
+
+function validateImage(file) {
+  if (!["image/jpeg","image/png","image/webp"].includes(file.type)) return toast("Use JPG, PNG ou WebP.", "error");
+  if (file.size > 2 * 1024 * 1024) return toast("A imagem ultrapassa o limite de 2 MB.", "error");
+  const img = new Image();
+  img.onload = () => {
+    const ratio = img.width / img.height;
+    if (Math.abs(ratio - 0.8) > 0.025) return toast("Prefira proporção 4:5 (ex.: 1080 × 1350 px).", "error");
+    if (img.width < 800 || img.height < 1000) return toast("Use pelo menos 800 × 1000 px.", "error");
+    pendingImageFile=file; removedExistingImage=false;
+    $("previewImagem").src=URL.createObjectURL(file);
+    $("previewInfo").textContent=`${img.width} × ${img.height} px • ${(file.size/1024/1024).toFixed(2)} MB`;
+    hide("uploadPlaceholder"); show("uploadPreview");
+  };
+  img.onerror=()=>toast("Não foi possível ler a imagem.", "error");
+  img.src=URL.createObjectURL(file);
+}
+
+async function uploadEventImage(eventId, file) {
+  const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const path = `event-cards/${eventId}/card.${ext}`;
+  const storageRef = ref(storage,path);
+  await uploadBytes(storageRef,file,{contentType:file.type,customMetadata:{eventId}});
+  return {url:await getDownloadURL(storageRef),path};
+}
+
+$("formEvento").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!canEditEvents()) return toast("Acesso administrativo necessário.", "error");
+  const id = $("eventoId").value || doc(collection(db,"eventos")).id;
+  const old = allAdminEvents.find(x=>x.id===id);
+  const data = {
+    title:$("titulo").value.trim(), categoria:$("categoriaSelect").value,
+    start:new Date($("dataInicio").value).toISOString(), end:new Date($("dataFim").value).toISOString(),
+    local:$("local").value.trim(), limiteVagas:Number($("limiteVagas").value)||0,
+    linkMeet:$("linkMeet").value.trim(), convidados:$("convidados").value.trim(),
+    realizador:$("realizador").value.trim(), palestrantes:$("palestrantes").value.trim(),
+    temCertificado:$("temCertificado").checked, horasCertificado:$("temCertificado").checked ? Number($("horasCertificado").value)||1 : 0,
+    linkMaterial:$("linkMaterial").value.trim(), descricao:$("descricao").value.trim(),
+    publicado:$("publicado").checked, status: old?.status || "publicado",
+    atualizadoEm:serverTimestamp()
+  };
+  if (!data.title || new Date(data.end) <= new Date(data.start)) return toast("Revise título e datas.", "error");
+  try {
+    let image = old?.linkConviteImg || "";
+    let imagePath = old?.imagemStoragePath || "";
+    if (pendingImageFile) {
+      const uploaded = await uploadEventImage(id,pendingImageFile);
+      image=uploaded.url; imagePath=uploaded.path;
+      if (old?.imagemStoragePath && old.imagemStoragePath !== imagePath) try { await deleteObject(ref(storage,old.imagemStoragePath)); } catch {}
+    } else if (removedExistingImage && old?.imagemStoragePath) {
+      try { await deleteObject(ref(storage,old.imagemStoragePath)); } catch {}
+      image=""; imagePath="";
+    }
+    data.linkConviteImg=image;
+    data.imagemStoragePath=imagePath;
+    if (!old) { data.criadoEm=serverTimestamp(); data.criadoPor=currentAdmin; }
+    await setDoc(doc(db,"eventos",id),data,{merge:true});
+    closeModal("modalEvento");
+    toast(old ? "Evento atualizado." : "Evento criado.", "success");
+  } catch (err) {
+    console.error(err);
+    toast(err.code==="permission-denied" ? "A operação foi bloqueada pelas regras de segurança." : "Erro ao salvar o evento.", "error");
+  }
+});
+
+async function loadAdminUsers() {
+  if (!canManageUsers()) return;
+  const snap = await getDocs(query(collection(db,"administradores"), orderBy("nome","asc")));
+  const rows = snap.docs.map(d=>({email:d.id,...d.data()}));
+  $("adminUsuariosBody").innerHTML = rows.map(u => `
+    <tr>
+      <td class="p-3 font-semibold">${escapeHtml(u.nome||"")}</td>
+      <td class="p-3">${escapeHtml(u.email||u.id)}</td>
+      <td class="p-3"><span class="px-2 py-1 rounded-full bg-slate-100">${u.role==="admin"?"Administrador":"Editor"}</span></td>
+      <td class="p-3">${u.ativo ? '<span class="text-emerald-600 font-bold">Ativo</span>' : '<span class="text-red-600 font-bold">Inativo</span>'}</td>
+      <td class="p-3 text-right"><button data-user-edit="${escapeHtml(u.email||u.id)}" class="px-2 py-1 bg-slate-100 rounded-lg">Editar</button></td>
+    </tr>`).join("");
+}
+$("btnNovoUsuario").addEventListener("click", () => {
+  $("formUsuario").reset(); $("usuarioEmailOriginal").value=""; $("usuarioAtivo").checked=true; $("modalUsuarioTitle").textContent="Autorizar e-mail"; openModal("modalUsuario");
+});
+document.addEventListener("click", async e => {
+  const btn=e.target.closest("[data-user-edit]");
+  if (!btn) return;
+  const snap=await getDoc(doc(db,"administradores",btn.dataset.userEdit));
+  if (!snap.exists()) return;
+  const u=snap.data();
+  $("usuarioEmailOriginal").value=btn.dataset.userEdit;
+  $("usuarioNome").value=u.nome||"";
+  $("usuarioEmail").value=btn.dataset.userEdit;
+  $("usuarioPerfil").value=u.role||"editor";
+  $("usuarioAtivo").checked=u.ativo!==false;
+  $("modalUsuarioTitle").textContent="Editar autorização";
+  openModal("modalUsuario");
+});
+$("formUsuario").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!canManageUsers()) return;
+  const email=normalizeEmail($("usuarioEmail").value);
+  const original=$("usuarioEmailOriginal").value;
+  if (!isAtiEmail(email)) return toast("Somente @ati.pe.gov.br pode ser autorizado.", "error");
+  const payload={nome:$("usuarioNome").value.trim(),role:$("usuarioPerfil").value,ativo:$("usuarioAtivo").checked,atualizadoEm:serverTimestamp()};
+  try {
+    if (original && original!==email) await deleteDoc(doc(db,"administradores",original));
+    await setDoc(doc(db,"administradores",email),payload,{merge:true});
+    closeModal("modalUsuario"); loadAdminUsers(); toast("Autorização salva.", "success");
+  } catch(err) { console.error(err); toast("Não foi possível salvar a autorização.", "error"); }
+});
+
+window.addEventListener("popstate", () => {
+  if (isEventRoute()) loadPublicEventFromRoute();
+  else closeModal("modalPublicEvento");
+});
+
+setupCategories();
+lucide.createIcons();
+setAdminTab(location.hash.replace(/^#/, "").toLowerCase() || "dashboard", false);
+if (isAdminRoute()) {
+  hide("publicApp"); show("adminApp","block");
+  completeEmailLinkIfNeeded();
+} else {
+  hide("adminApp"); show("publicApp","block");
+  initCalendar();
+  listenPublicEvents();
+  loadPublicEventFromRoute();
+}
+</script>
+</body>
+</html>
