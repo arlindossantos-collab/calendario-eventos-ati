@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v3.0.1 — 2026-09-03
+
+### Ajuste de identidade visual
+- Corrigido o dimensionamento do logotipo do Governo de Pernambuco / ATI no cabeçalho.
+- O arquivo `logo-ati.png` foi recortado para remover as grandes margens transparentes que faziam o conteúdo aparecer minúsculo.
+- Ajustada a altura responsiva do logotipo para melhorar a leitura em desktop e dispositivos menores.
+- Mantida a proporção e a arte original do logotipo, sem redesenho.
+
+
 ## 3.0.0 — 03/09/2026
 
 ### Reengenharia do módulo administrativo
