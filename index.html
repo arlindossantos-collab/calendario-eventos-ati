@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Calendário de Eventos da Agência Estadual de Tecnologia da Informação - ATI Pernambuco">
-  <meta name="app-version" content="2.2.0">
+  <meta name="app-version" content="3.0.0">
   <title>Calendário de Eventos ATI Pernambuco</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -44,6 +44,21 @@
       .admin-tabs { min-width:max-content; }
       .admin-tab { min-height:46px; padding:.75rem .9rem; }
     }
+
+    /* ===== ADMIN V3 ===== */
+    .admin-v3-version { display:inline-flex; align-items:center; gap:.35rem; font-size:10px; font-weight:800; line-height:1; padding:.42rem .65rem; border-radius:999px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; white-space:nowrap; }
+    #adminApp #adminPanelView { display:block !important; width:100% !important; min-width:0 !important; }
+    #adminApp #adminTabContent { display:block !important; width:100% !important; min-width:0 !important; }
+    #adminApp .admin-v3-panel { display:block !important; width:100% !important; min-width:0 !important; }
+    #adminApp .admin-v3-panel[hidden] { display:none !important; }
+    #adminApp .admin-v3-tabs { display:flex; flex-wrap:wrap; gap:.5rem; width:100%; align-items:stretch; }
+    #adminApp .admin-v3-tab { appearance:none; -webkit-appearance:none; display:inline-flex !important; align-items:center; justify-content:center; gap:.5rem; min-height:46px; padding:.75rem 1rem; border:1px solid #cbd5e1; border-radius:.8rem; background:#fff; color:#334155; cursor:pointer; pointer-events:auto; position:relative; z-index:5; font-size:.75rem; font-weight:800; line-height:1; white-space:nowrap; }
+    #adminApp .admin-v3-tab:hover { background:#f8fafc; }
+    #adminApp .admin-v3-tab[aria-selected="true"] { background:#172554; border-color:#172554; color:#fff; }
+    #adminApp .admin-v3-tab:focus-visible { outline:3px solid rgba(37,99,235,.3); outline-offset:2px; }
+    #adminApp .admin-v3-tab[hidden] { display:none !important; }
+    #adminApp .admin-v3-status { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; padding:.75rem 1rem; border:1px solid #dbeafe; border-radius:1rem; background:#f8fbff; color:#475569; font-size:11px; }
+    @media (max-width:640px) { #adminApp .admin-v3-tabs { flex-direction:column; } #adminApp .admin-v3-tab { width:100%; justify-content:flex-start; } }
   </style>
 </head>
 
@@ -67,6 +82,7 @@
     <div id="adminHeaderActions" class="hidden items-center gap-2">
       <a href="/" class="px-3 py-2 rounded-xl text-xs font-semibold text-blue-100 hover:bg-blue-900">Ver calendário público</a>
       <span id="adminIdentity" class="hidden md:inline text-xs text-blue-100 font-medium border-l border-blue-800 pl-3"></span>
+      <span class="admin-v3-version" data-app-version>v3.0.0</span>
       <button id="btnLogout" class="px-3 py-2 rounded-xl bg-red-500/10 border border-red-400/30 text-red-100 text-xs font-semibold hover:bg-red-500/20">Sair</button>
     </div>
   </div>
@@ -164,7 +180,7 @@
         <span class="text-[10px] uppercase tracking-wider font-bold text-blue-600">Gestão</span>
         <h2 class="text-2xl font-black text-slate-900">Painel administrativo</h2>
         <p class="text-xs text-slate-500">Eventos, inscrições, presença e usuários autorizados.</p>
-        <span id="appVersionBadge" class="inline-flex mt-2 items-center rounded-full bg-slate-100 border border-slate-200 px-2 py-1 text-[10px] font-bold text-slate-500">Versão 2.2.0</span>
+        <span id="appVersionBadge" class="admin-v3-version mt-2" data-app-version>Aplicação v3.0.0</span>
         <p class="text-[10px] text-slate-400 mt-1">Controle de versão ativo • alterações registradas no CHANGELOG.md</p>
       </div>
       <button id="btnNovoEvento" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black px-4 py-3 rounded-xl text-xs flex items-center gap-2 shadow-sm">
@@ -172,24 +188,31 @@
       </button>
     </div>
 
-    <div class="admin-tabs-wrap bg-slate-100/90 border border-slate-200 rounded-2xl p-1.5 shadow-sm" aria-label="Navegação administrativa">
-      <nav id="adminTabs" class="admin-tabs" role="tablist" aria-label="Seções do painel">
-        <button type="button" class="admin-tab active" data-admin-tab="dashboard" role="tab" aria-selected="true" aria-controls="adminTabDashboard">
+    <div class="admin-tabs-wrap bg-slate-100/90 border border-slate-200 rounded-2xl p-1.5 shadow-sm" aria-label="Navegação administrativa V3">
+      <nav id="adminTabs" class="admin-v3-tabs" role="tablist" aria-label="Seções do painel" data-admin-navigation="v3">
+        <button type="button" class="admin-v3-tab admin-tab active" data-admin-tab="dashboard" role="tab" aria-selected="true" aria-controls="adminTabDashboard">
           <i data-lucide="layout-dashboard"></i><span>Visão geral</span>
         </button>
-        <button type="button" class="admin-tab" data-admin-tab="eventos" role="tab" aria-selected="false" aria-controls="adminTabEventos">
+        <button type="button" class="admin-v3-tab admin-tab" data-admin-tab="eventos" role="tab" aria-selected="false" aria-controls="adminTabEventos">
           <i data-lucide="calendar-days"></i><span>Eventos</span>
         </button>
-        <button type="button" class="admin-tab" data-admin-tab="inscricoes" role="tab" aria-selected="false" aria-controls="adminTabInscricoes">
+        <button type="button" class="admin-v3-tab admin-tab" data-admin-tab="inscricoes" role="tab" aria-selected="false" aria-controls="adminTabInscricoes">
           <i data-lucide="users"></i><span>Inscrições</span>
         </button>
-        <button type="button" id="adminTabUsuariosBtn" class="admin-tab hidden" data-admin-tab="usuarios" role="tab" aria-selected="false" aria-controls="adminTabUsuarios">
+        <button type="button" id="adminTabUsuariosBtn" class="admin-v3-tab admin-tab hidden" data-admin-tab="usuarios" role="tab" aria-selected="false" aria-controls="adminTabUsuarios">
           <i data-lucide="shield-user"></i><span>Usuários</span>
         </button>
       </nav>
     </div>
+    <div class="admin-v3-status" aria-live="polite">
+      <strong class="text-slate-800">Navegação administrativa</strong>
+      <span>Selecione uma aba para abrir o módulo correspondente.</span>
+      <span class="admin-v3-version">Aplicação v3.0.0</span>
+      <span id="adminCurrentTabLabel" class="font-bold text-blue-700">Visão geral</span>
+    </div>
 
-    <section id="adminTabDashboard" class="admin-tab-panel space-y-5" role="tabpanel">
+    <div id="adminTabContent">
+    <section id="adminTabDashboard" data-admin-panel="dashboard" class="admin-v3-panel admin-tab-panel space-y-5" role="tabpanel">
       <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
         <div class="bg-white rounded-2xl border p-4"><span id="admTotalEventos" class="block text-2xl font-black">0</span><span class="text-[10px] text-slate-500">Eventos</span></div>
         <div class="bg-white rounded-2xl border p-4"><span id="admFuturos" class="block text-2xl font-black text-blue-600">0</span><span class="text-[10px] text-slate-500">Futuros</span></div>
@@ -217,7 +240,7 @@
       </div>
     </section>
 
-    <section id="adminTabEventos" class="admin-tab-panel hidden space-y-5" role="tabpanel" aria-hidden="true">
+    <section id="adminTabEventos" data-admin-panel="eventos" class="admin-v3-panel admin-tab-panel hidden space-y-5" role="tabpanel" aria-hidden="true">
       <div class="bg-white rounded-2xl border shadow-sm p-5">
         <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div><h3 class="font-bold text-slate-900">Eventos cadastrados</h3><p class="text-xs text-slate-500">Crie, edite, publique e acompanhe os eventos.</p></div>
@@ -232,7 +255,7 @@
       </div>
     </section>
 
-    <section id="adminTabInscricoes" class="admin-tab-panel hidden space-y-5" role="tabpanel" aria-hidden="true">
+    <section id="adminTabInscricoes" data-admin-panel="inscricoes" class="admin-v3-panel admin-tab-panel hidden space-y-5" role="tabpanel" aria-hidden="true">
       <div class="bg-white rounded-2xl border shadow-sm p-5">
         <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div><h3 class="font-bold text-slate-900">Inscrições</h3><p class="text-xs text-slate-500">Somente usuários administrativos autorizados conseguem visualizar estes dados.</p></div>
@@ -247,7 +270,7 @@
       </div>
     </section>
 
-    <section id="adminTabUsuarios" class="admin-tab-panel hidden space-y-5" role="tabpanel" aria-hidden="true">
+    <section id="adminTabUsuarios" data-admin-panel="usuarios" class="admin-v3-panel admin-tab-panel hidden space-y-5" role="tabpanel" aria-hidden="true">
       <div class="bg-white rounded-2xl border shadow-sm p-5">
         <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div><h3 class="font-bold text-slate-900">Usuários autorizados</h3><p class="text-xs text-slate-500">O cadastro libera o acesso administrativo; o usuário entra pelo link enviado ao e-mail institucional.</p></div>
@@ -261,6 +284,7 @@
         </div>
       </div>
     </section>
+    </div>
   </div>
 </main>
 
@@ -762,86 +786,112 @@ onAuthStateChanged(auth, async user => {
 
 $("btnLogout").addEventListener("click", () => signOut(auth));
 
-function setAdminTab(name, updateUrl = true) {
-  const allowed = ["dashboard", "eventos", "inscricoes", "usuarios"];
-  const requested = String(name || "").toLowerCase();
-  name = allowed.includes(requested) ? requested : "dashboard";
+const ADMIN_TABS = Object.freeze({
+  dashboard: { label: "Visão geral", panel: "adminTabDashboard" },
+  eventos: { label: "Eventos", panel: "adminTabEventos" },
+  inscricoes: { label: "Inscrições", panel: "adminTabInscricoes" },
+  usuarios: { label: "Usuários", panel: "adminTabUsuarios" }
+});
 
-  // A aba Usuários só existe para administradores.
-  if (name === "usuarios" && !canManageUsers()) name = "dashboard";
+function getAdminTabFromHash() {
+  return String(window.location.hash || "").replace(/^#/, "").trim().toLowerCase();
+}
 
-  const tabButtons = [...document.querySelectorAll("#adminTabs [data-admin-tab]")];
-  const panels = [...document.querySelectorAll("#adminPanelView > .admin-tab-panel")];
+function setAdminTab(name = "dashboard", updateUrl = true) {
+  let tabName = String(name || "dashboard").trim().toLowerCase();
+  if (!ADMIN_TABS[tabName]) tabName = "dashboard";
+  if (tabName === "usuarios" && !canManageUsers()) tabName = "dashboard";
 
-  tabButtons.forEach(btn => {
-    const visible = !btn.hidden && !btn.classList.contains("hidden");
-    const active = visible && btn.dataset.adminTab === name;
-    btn.classList.toggle("active", active);
-    btn.setAttribute("aria-selected", active ? "true" : "false");
-    btn.setAttribute("tabindex", active ? "0" : "-1");
+  const root = $("adminPanelView");
+  if (!root) return tabName;
+
+  const buttons = [...root.querySelectorAll("[data-admin-tab]")];
+  const panels = [...root.querySelectorAll("[data-admin-panel]")];
+
+  buttons.forEach(button => {
+    const active = button.dataset.adminTab === tabName && !button.hidden && !button.disabled;
+    button.setAttribute("aria-selected", active ? "true" : "false");
+    button.setAttribute("tabindex", active ? "0" : "-1");
+    button.classList.toggle("active", active);
   });
 
   panels.forEach(panel => {
-    const panelName = panel.id.replace(/^adminTab/, "").toLowerCase();
-    const active = panelName === name;
+    const active = panel.dataset.adminPanel === tabName;
     panel.hidden = !active;
-    panel.classList.toggle("hidden", !active);
     panel.setAttribute("aria-hidden", active ? "false" : "true");
   });
 
+  const currentLabel = $("adminCurrentTabLabel");
+  if (currentLabel) currentLabel.textContent = ADMIN_TABS[tabName].label;
+
   if (updateUrl) {
-    const nextHash = `#${name}`;
-    if (location.hash !== nextHash) {
-      history.replaceState(null, "", `${location.pathname}${location.search}${nextHash}`);
+    const nextHash = `#${tabName}`;
+    if (window.location.hash !== nextHash) {
+      history.replaceState({ adminTab: tabName }, "", `${location.pathname}${location.search}${nextHash}`);
     }
   }
 
-  // Só inicializa/renderiza o conteúdo da aba ativa.
-  if (name === "dashboard") {
-    renderAdminMetrics();
-    renderAdminSummary();
-    if (window.Chart && $("adminChart")) renderAdminChart();
-  } else if (name === "eventos") {
-    renderAdminEvents();
-  } else if (name === "inscricoes") {
-    renderAdminRegistrations();
-  } else if (name === "usuarios") {
-    loadAdminUsers();
+  try {
+    if (tabName === "dashboard") {
+      renderAdminMetrics();
+      renderAdminSummary();
+      if (window.Chart && $("adminChart")) renderAdminChart();
+    } else if (tabName === "eventos") {
+      renderAdminEvents();
+    } else if (tabName === "inscricoes") {
+      renderAdminRegistrations();
+    } else if (tabName === "usuarios") {
+      loadAdminUsers();
+    }
+  } catch (err) {
+    console.error("[ATIAdmin] erro ao renderizar aba:", err);
+    toast("A aba foi aberta, mas houve um erro ao carregar seus dados.", "error");
   }
 
   if (window.lucide) lucide.createIcons();
+  return tabName;
 }
 
-// Os listeners são ligados diretamente aos botões. Isso evita depender de
-// bubbling/delegação e garante que clique no ícone ou no texto ative a aba.
-const adminTabs = $("adminTabs");
-if (adminTabs) {
-  adminTabs.querySelectorAll("[data-admin-tab]").forEach(tab => {
-    const activate = event => {
-      if (tab.disabled || tab.hidden || tab.classList.contains("hidden")) return;
+function installAdminNavigation() {
+  const nav = $("adminTabs");
+  if (!nav || nav.dataset.v3Ready === "true") return;
+  nav.dataset.v3Ready = "true";
+
+  nav.querySelectorAll("[data-admin-tab]").forEach(button => {
+    button.addEventListener("click", event => {
       event.preventDefault();
-      setAdminTab(tab.dataset.adminTab);
-    };
-    tab.addEventListener("click", activate);
-    tab.addEventListener("keydown", event => {
-      if (event.key === "Enter" || event.key === " ") activate(event);
+      event.stopPropagation();
+      if (button.disabled || button.hidden) return;
+      setAdminTab(button.dataset.adminTab, true);
     });
+
+    button.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      if (button.disabled || button.hidden) return;
+      setAdminTab(button.dataset.adminTab, true);
+    });
+  });
+
+  document.addEventListener("click", event => {
+    const goto = event.target.closest("[data-admin-goto]");
+    if (!goto) return;
+    event.preventDefault();
+    setAdminTab(goto.dataset.adminGoto, true);
+  });
+
+  window.addEventListener("hashchange", () => {
+    if (isAdminRoute()) setAdminTab(getAdminTabFromHash(), false);
   });
 }
 
-document.addEventListener("click", e => {
-  const goto = e.target.closest("[data-admin-goto]");
-  if (goto) {
-    e.preventDefault();
-    setAdminTab(goto.dataset.adminGoto);
-  }
+window.ATIAdmin = Object.freeze({
+  version: "3.0.0",
+  setTab: name => setAdminTab(name, true),
+  getTab: getAdminTabFromHash
 });
 
-window.addEventListener("hashchange", () => {
-  if (!isAdminRoute()) return;
-  const requested = location.hash.replace(/^#/, "").toLowerCase();
-  setAdminTab(requested || "dashboard", false);
-});
+installAdminNavigation();
 
 function renderAdminSummary() {
   const events = [...allAdminEvents].sort((a,b)=>new Date(a.start)-new Date(b.start)).slice(0,6);
@@ -1153,8 +1203,8 @@ window.addEventListener("popstate", () => {
 });
 
 setupCategories();
-lucide.createIcons();
-setAdminTab(location.hash.replace(/^#/, "").toLowerCase() || "dashboard", false);
+if (window.lucide) lucide.createIcons();
+installAdminNavigation();
 if (isAdminRoute()) {
   hide("publicApp"); show("adminApp","block");
   completeEmailLinkIfNeeded();
